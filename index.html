@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>El Último Recuerdo - Captura Aliada</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b0914;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0; left: 0;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: env(safe-area-inset-top, 20px);
+            left: 20px;
+            color: #fff;
+            pointer-events: none;
+            z-index: 5;
+        }
+        #score { font-size: 24px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+        #ammo { font-size: 16px; font-weight: bold; color: #3498db; margin-top: 2px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+        #narrative { 
+            font-size: 14px; 
+            color: #b3aebf; 
+            margin-top: 6px; 
+            font-style: italic;
+            transition: opacity 0.4s, transform 0.4s;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+        
+        /* Mensaje cinematográfico */
+        #reveal-msg {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.7);
+            color: #54a0ff;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            text-shadow: 0 0 25px rgba(84, 160, 255, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+        #reveal-msg.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        #btn-shoot {
+            position: absolute;
+            right: env(safe-area-inset-right, 25px);
+            bottom: env(safe-area-inset-bottom, 25px);
+            background: rgba(52, 152, 219, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 2px solid #3498db;
+            border-radius: 25px;
+            width: 140px;
+            height: 85px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            z-index: 15;
+        }
+        #btn-shoot span { font-size: 11px; opacity: 0.8; margin-top: 3px; font-weight: normal; }
+        #btn-shoot:active { background: rgba(52, 152, 219, 0.5); }
+        
+        /* =========================================================
+           ESTILOS DEL MENÚ Y PANTALLA DE CARGA LIMPIOS
+        ========================================================= */
+        #menu {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1b152d 0%, #08060f 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            z-index: 20;
+        }
+
+        .slither-title {
+            font-size: clamp(34px, 7vw, 60px);
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: lowercase;
+            letter-spacing: -1px;
+            text-shadow: 
+                0 0 15px rgba(225, 177, 44, 0.6),
+                3px 3px 0px #ab7d07,
+                -2px -2px 0px #000;
+            margin-bottom: 20px;
+        }
+        .slither-title span {
+            color: #e1b12c;
+        }
+
+        /* Input Nickname */
+        .nickname-box {
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(225, 177, 44, 0.5);
+            border-radius: 30px;
+            padding: 12px 25px;
+            font-size: 18px;
+            color: #fff;
+            text-align: center;
+            width: 280px;
+            outline: none;
+            margin-bottom: 15px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+        .nickname-box:focus {
+            border-color: #e1b12c;
+            box-shadow: 0 0 15px rgba(225, 177, 44, 0.4);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .nickname-box::placeholder { color: rgba(255, 255, 255, 0.5); }
+
+        /* Botón Único de Jugar */
+        .btn-slither {
+            width: 260px;
+            padding: 16px 20px;
+            margin: 10px 0;
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 0px rgba(0,0,0,0.3), 0 8px 15px rgba(0,0,0,0.4);
+            transition: transform 0.1s, filter 0.2s;
+            background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+            border: 2px solid #58d68d;
+        }
+        .btn-slither:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px rgba(0,0,0,0.3);
+        }
+
+        /* Icono Ajustes Superior */
+        .icon-btn-top {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+        .icon-btn-top svg { width: 22px; height: 22px; fill: #fff; margin-bottom: 2px; }
+
+        /* Contenedor de Pantalla de Carga */
+        #loader-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .loader-bar-bg {
+            width: 280px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #e1b12c;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+            padding: 2px;
+            box-shadow: 0 0 15px rgba(225, 177, 44, 0.3);
+        }
+        .loader-bar-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #e1b12c, #f39c12);
+            border-radius: 10px;
+            transition: width 0.2s ease-out;
+        }
+        .loader-text {
+            color: #ccc;
+            font-size: 14px;
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        .game-over-msg { font-size: 18px; font-weight: bold; color: #ff7675; margin-top: 15px; }
+        .victory-msg { font-size: 20px; font-weight: bold; color: #2ecc71; margin-top: 15px; text-shadow: 0 0 10px rgba(46,204,113,0.4); }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="ui-overlay">
+        <div id="score">Recuerdos: 0</div>
+        <div id="ammo">Luz Espiritual: 5</div>
+        <div id="narrative">"No dejes que el olvido te alcance..."</div>
+    </div>
+
+    <div id="reveal-msg">NO ESTÁS SOLO...</div>
+
+    <div id="btn-shoot">DISPARAR<span>Rayo de luz</span></div>
+
+    <!-- Menú Estilo Slither.io -->
+    <div id="menu">
+        <div class="icon-btn-top" onclick="alert('Opciones de juego')">
+            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+            Ajustes
+        </div>
+
+        <div id="menu-content">
+            <h1 class="slither-title" id="menu-title">el último <span>recuerdo</span></h1>
+            
+            <input type="text" id="nickname" class="nickname-box" placeholder="Tu Apodo..." maxlength="15" value="Jugador 1">
+            
+            <br>
+            <button class="btn-slither" onclick="startLoading()">
+                ¡Jugar!
+            </button>
+
+            <div id="verdict-space"></div>
+        </div>
+
+        <!-- Pantalla de carga interna -->
+        <div id="loader-screen">
+            <h2 style="color: #e1b12c; font-size: 24px; font-weight: 800;">Cargando Recuerdo...</h2>
+            <div class="loader-bar-bg">
+                <div class="loader-bar-fill" id="loader-fill"></div>
+            </div>
+            <p class="loader-text" id="loader-status">Sincronizando fragmentos...</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const narrativeElement = document.getElementById('narrative');
+        const scoreElement = document.getElementById('score');
+        const ammoElement = document.getElementById('ammo');
+        const menu = document.getElementById('menu');
+        const menuContent = document.getElementById('menu-content');
+        const loaderScreen = document.getElementById('loader-screen');
+        const loaderFill = document.getElementById('loader-fill');
+        const loaderStatus = document.getElementById('loader-status');
+        const btnShoot = document.getElementById('btn-shoot');
+        const verdictSpace = document.getElementById('verdict-space');
+        const revealMsg = document.getElementById('reveal-msg');
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (player) {
+                player.x = canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12;
+            }
+        }
+        window.addEventListener('resize', resize);
+
+        let player, entities, bullets, stars, allies, score, ammo, gameActive, speedMultiplier;
+        let spawnTimer = 0;
+        let narrativeTimer = 0;
+        let pulseAnim = 0; 
+        let allyShootTimer = 0;
+        
+        let level24Triggered = false;
+        let level30Triggered = false;
+
+        const phrases = [
+            "¿Quién era yo antes de esto?",
+            "Siento que olvido algo importante...",
+            "Esos fragmentos son familiares.",
+            "El vacío rojo me consume.",
+            "Lo que no recuerdas a tiempo, te termina lastimando..."
+        ];
+
+        const loadingTexts = [
+            "Conectando con la memoria...",
+            "Cargando entidades...",
+            "Preparando Luz Espiritual...",
+            "¡Listo para recordar!"
+        ];
+
+        function init() {
+            player = {
+                x: canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12,
+                y: canvas.height / 2,
+                targetY: canvas.height / 2,
+                radius: 18
+            };
+            entities = [];
+            bullets = [];
+            stars = [];
+            allies = []; 
+            score = 0;
+            ammo = 5; 
+            speedMultiplier = 1;
+            spawnTimer = 0;
+            narrativeTimer = 0;
+            pulseAnim = 0;
+            allyShootTimer = 0;
+            level24Triggered = false;
+            level30Triggered = false;
+            
+            for(let i=0; i<40; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5,
+                    speed: Math.random() * 1.2 + 0.4
+                });
+            }
+
+            scoreElement.innerText = "Recuerdos: 0";
+            ammoElement.innerText = "Luz Espiritual: " + ammo;
+            narrativeElement.innerText = '"No dejes que el olvido te gane..."';
+            verdictSpace.innerHTML = "";
+            revealMsg.classList.remove('show');
+            gameActive = true;
+        }
+
+        window.addEventListener('touchstart', handleTouch, { passive: false });
+        window.addEventListener('touchmove', handleTouch, { passive: false });
+
+        function handleTouch(e) {
+            if (!gameActive) return;
+            for (let i = 0; i < e.touches.length; i++) {
+                let touch = e.touches[i];
+                if (touch.clientX < canvas.width * 0.7) {
+                    player.targetY = touch.clientY;
+                }
+            }
+        }
+
+        btnShoot.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameActive && ammo > 0) {
+                ammo--;
+                ammoElement.innerText = "Luz Espiritual: " + ammo;
+                bullets.push({
+                    x: player.x + player.radius,
+                    y: player.y,
+                    radius: 4,
+                    speed: 13,
+                    fromAlly: false
+                });
+            }
+        });
+
+        // Simulación de pantalla de carga
+        function startLoading() {
+            menuContent.style.display = 'none';
+            loaderScreen.style.display = 'flex';
+            
+            let progress = 0;
+            let textIdx = 0;
+
+            let interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 20) + 12;
+                if (progress > 100) progress = 100;
+                
+                loaderFill.style.width = progress + '%';
+                
+                if (textIdx < loadingTexts.length - 1 && progress > (textIdx + 1) * 25) {
+                    textIdx++;
+                    loaderStatus.innerText = loadingTexts[textIdx];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        startGame();
+                    }, 300);
+                }
+            }, 150);
+        }
+
+        function startGame() {
+            menu.style.display = 'none';
+            menuContent.style.display = 'block';
+            loaderScreen.style.display = 'none';
+            loaderFill.style.width = '0%';
+            
+            init();
+            resize(); 
+            spawnEntity(); 
+            gameLoop();
+        }
+
+        function gameOver() {
+            gameActive = false;
+            menu.style.display = 'flex';
+            
+            document.getElementById('menu-title').innerHTML = `el último <span>recuerdo</span>`;
+            
+            if (score < 10) {
+                verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste )</p>`;
+            } else if (score <= 20) {
+                verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste pero 😔 no pudiste )</p>`;
+            } else {
+                verdictSpace.innerHTML = `<p class="victory-msg">( felicidades eres tu de nuevo )</p>`;
+            }
+        }
+
+        function spawnEntity() {
+            if (!gameActive) return;
+            let rand = Math.random();
+            let type = 'enemy';
+            let unstable = false;
+
+            if (rand > 0.5) {
+                type = 'memory';
+                if (Math.random() < 0.3) unstable = true;
+            }
+
+            entities.push({
+                x: canvas.width + 40,
+                y: Math.random() * (canvas.height - 100) + 50,
+                radius: type === 'enemy' ? Math.random() * 6 + 12 : 11,
+                type: type,
+                isUnstable: unstable,
+                age: 0,
+                speed: (Math.random() * 2 + 5) * speedMultiplier
+            });
+        }
+
+        function triggerAllyItem(text, isSecond) {
+            revealMsg.innerText = text;
+            revealMsg.classList.add('show');
+            setTimeout(() => revealMsg.classList.remove('show'), 2500);
+
+            entities.push({
+                x: canvas.width + 40,
+                y: Math.random() * (canvas.height - 150) + 75,
+                radius: 14,
+                type: 'ally_trigger',
+                isSecondAlly: isSecond,
+                speed: 4.5
+            });
+        }
+
+        function checkLevelTriggers() {
+            if (score >= 24 && !level24Triggered) {
+                level24Triggered = true;
+                triggerAllyItem("¡UN ALMA SE ACERCA!", false);
+            }
+            if (score >= 30 && !level30Triggered) {
+                level30Triggered = true;
+                triggerAllyItem("¡OTRA PRESENCIA EMERGE!", true);
+            }
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+
+            ctx.fillStyle = '#0b0914';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            pulseAnim += 0.15;
+
+            // Estrellas
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            for(let star of stars) {
+                ctx.fillRect(star.x, star.y, star.size, star.size);
+                star.x -= star.speed * speedMultiplier;
+                if(star.x < 0) star.x = canvas.width;
+            }
+
+            spawnTimer++;
+            let spawnRate = Math.max(18, 60 - (score * 1.5));
+            if(spawnTimer >= spawnRate) {
+                spawnEntity();
+                spawnTimer = 0;
+            }
+
+            narrativeTimer++;
+            if(narrativeTimer >= 450) {
+                narrativeElement.style.opacity = 0;
+                setTimeout(() => {
+                    narrativeElement.innerText = `"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
+                    narrativeElement.style.opacity = 1;
+                }, 300);
+                narrativeTimer = 0;
+            }
+
+            // Movimiento e interpolación del jugador
+            let dyPlayer = player.targetY - player.y;
+            player.y += dyPlayer * 0.18;
+
+            if (player.y < player.radius + 15) player.y = player.radius + 15;
+            if (player.y > canvas.height - player.radius - 15) player.y = canvas.height - player.radius - 15;
+
+            // Personaje Principal (Blanco)
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ffffff';
+            ctx.fill();
+            ctx.shadowBlur = 0; 
+
+            ctx.fillStyle = '#0b0914'; 
+            ctx.beginPath();
+            ctx.arc(player.x + 6, player.y - 4, 2.5, 0, Math.PI * 2); 
+            ctx.arc(player.x + 6, player.y + 4, 2.5, 0, Math.PI * 2); 
+            ctx.fill();
+
+            // Renderizar y actualizar los aliados conseguidos
+            if (allies.length > 0) {
+                allyShootTimer++;
+                let shouldAllyShoot = (allyShootTimer >= 45);
+                if(shouldAllyShoot) allyShootTimer = 0;
+
+                for (let ally of allies) {
+                    ally.angle += 0.05;
+                    let currentX = player.x + ally.offsetXML + Math.sin(ally.angle) * 4;
+                    let currentY = player.y + ally.offsetY + Math.cos(ally.angle) * 4;
+
+                    ctx.beginPath();
+                    ctx.arc(currentX, currentY, ally.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#54a0ff';
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#54a0ff';
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+
+                    ctx.fillStyle = '#0b0914';
+                    ctx.beginPath();
+                    ctx.arc(currentX + 3, currentY - 2, 1.5, 0, Math.PI * 2);
+                    ctx.arc(currentX + 3, currentY + 2, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (shouldAllyShoot) {
+                        bullets.push({
+                            x: currentX + ally.radius,
+                            y: currentY,
+                            radius: 3,
+                            speed: 11,
+                            fromAlly: true
+                        });
+                    }
+                }
+            }
+
+            // Procesar Proyectiles
+            for (let b = bullets.length - 1; b >= 0; b--) {
+                let bullet = bullets[b];
+                bullet.x += bullet.speed;
+                
+                ctx.fillStyle = bullet.fromAlly ? '#74b9ff' : '#3498db';
+                ctx.fillRect(bullet.x, bullet.y - 2, 14, 4);
+
+                if (bullet.x > canvas.width + 20) {
+                    bullets.splice(b, 1);
+                    continue;
+                }
+
+                for (let i = entities.length - 1; i >= 0; i--) {
+                    let e = entities[i];
+                    if (e.type === 'enemy') {
+                        let dx = bullet.x - e.x;
+                        let dy = bullet.y - e.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < e.radius + bullet.radius) {
+                            entities.splice(i, 1); 
+                            bullets.splice(b, 1); 
+                            score += 1; 
+                            scoreElement.innerText = "Recuerdos: " + score;
+                            checkLevelTriggers();
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Procesar Entidades
+            for (let i = entities.length - 1; i >= 0; i--) {
+                let e = entities[i];
+                e.x -= e.speed;
+
+                if (e.type === 'memory' && e.isUnstable) {
+                    e.age += 1;
+                    if (e.age >= 240) { 
+                        e.type = 'enemy';
+                        e.isUnstable = false;
+                        e.radius = Math.random() * 4 + 13;
+                    }
+                }
+
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+
+                if (e.type === 'enemy') {
+                    ctx.fillStyle = '#e74c3c';
+                } else if (e.type === 'ally_trigger') {
+                    ctx.fillStyle = '#54a0ff';
+                    ctx.shadowBlur = 18;
+                    ctx.shadowColor = '#54a0ff';
+                } else if (e.isUnstable) {
+                    let ratio = e.age / 240;
+                    let r = Math.floor(225 + (231 - 225) * ratio);
+                    let g = Math.floor(177 - (177 - 76) * ratio);
+                    let b = Math.floor(44 - (44 - 60) * ratio);
+                    ctx.fillStyle = `rgb(${r},${g},${b})`;
+                    if (Math.sin(pulseAnim) > 0) {
+                        ctx.shadowBlur = 12;
+                        ctx.shadowColor = `rgba(${r},${g},${b}, 0.8)`;
+                    }
+                } else {
+                    ctx.fillStyle = '#e1b12c';
+                }
+
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                // Colisiones
+                let dx = player.x - e.x;
+                let dy = player.y - e.y;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < player.radius + e.radius) {
+                    if (e.type === 'enemy') {
+                        gameOver();
+                        return;
+                    } else if (e.type === 'ally_trigger') {
+                        if (!e.isSecondAlly) {
+                            allies.push({ offsetXML: -25, offsetY: -35, radius: 10, angle: 0 });
+                            narrativeElement.innerText = '"Un aliado se ha unido a tu causa..."';
+                        } else {
+                            allies.push({ offsetXML: -25, offsetY: 35, radius: 10, angle: Math.PI });
+                            narrativeElement.innerText = '"Los lazos de luz se fortalecen..."';
+                        }
+                        entities.splice(i, 1);
+                    } else {
+                        entities.splice(i, 1);
+                        score++;
+                        ammo = Math.min(10, ammo + 1); 
+                        scoreElement.innerText = "Recuerdos: " + score;
+                        ammoElement.innerText = "Luz Espiritual: " + ammo;
+                        speedMultiplier += 0.025; 
+                        checkLevelTriggers();
+                    }
+                    continue;
+                }
+
+                if (e.x < -50) {
+                    entities.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+</body>
+</html>
