@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>El Último Recuerdo - Captura Aliada</title>
+    <title>El Último Recuerdo</title>
     <style>
         * {
             box-sizing: border-box;
@@ -45,7 +45,7 @@
             transition: opacity 0.4s, transform 0.4s;
             text-shadow: 0 1px 3px rgba(0,0,0,0.6);
         }
-        
+
         /* Mensaje cinematográfico */
         #reveal-msg {
             position: absolute;
@@ -67,7 +67,7 @@
             opacity: 1;
             transform: translate(-50%, -50%) scale(1);
         }
-        
+
         #btn-shoot {
             position: absolute;
             right: env(safe-area-inset-right, 25px);
@@ -92,10 +92,8 @@
         }
         #btn-shoot span { font-size: 11px; opacity: 0.8; margin-top: 3px; font-weight: normal; }
         #btn-shoot:active { background: rgba(52, 152, 219, 0.5); }
-        
-        /* =========================================================
-           ESTILOS DEL MENÚ Y PANTALLA DE CARGA LIMPIOS
-        ========================================================= */
+
+        /* Estilos del Menú */
         #menu {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -126,7 +124,6 @@
             color: #e1b12c;
         }
 
-        /* Input Nickname */
         .nickname-box {
             background: rgba(255, 255, 255, 0.12);
             border: 2px solid rgba(225, 177, 44, 0.5);
@@ -148,7 +145,6 @@
         }
         .nickname-box::placeholder { color: rgba(255, 255, 255, 0.5); }
 
-        /* Botón Único de Jugar */
         .btn-slither {
             width: 260px;
             padding: 16px 20px;
@@ -170,7 +166,6 @@
             box-shadow: 0 2px 0px rgba(0,0,0,0.3);
         }
 
-        /* Icono Ajustes Superior */
         .icon-btn-top {
             position: absolute;
             top: 25px;
@@ -192,7 +187,6 @@
         }
         .icon-btn-top svg { width: 22px; height: 22px; fill: #fff; margin-bottom: 2px; }
 
-        /* Contenedor de Pantalla de Carga */
         #loader-screen {
             display: none;
             flex-direction: column;
@@ -243,7 +237,7 @@
 
     <div id="btn-shoot">DISPARAR<span>Rayo de luz</span></div>
 
-    <!-- Menú Estilo Slither.io -->
+    <!-- Menú -->
     <div id="menu">
         <div class="icon-btn-top" onclick="alert('Opciones de juego')">
             <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
@@ -252,9 +246,9 @@
 
         <div id="menu-content">
             <h1 class="slither-title" id="menu-title">el último <span>recuerdo</span></h1>
-            
+
             <input type="text" id="nickname" class="nickname-box" placeholder="Tu Apodo..." maxlength="15" value="Jugador 1">
-            
+
             <br>
             <button class="btn-slither" onclick="startLoading()">
                 ¡Jugar!
@@ -263,7 +257,6 @@
             <div id="verdict-space"></div>
         </div>
 
-        <!-- Pantalla de carga interna -->
         <div id="loader-screen">
             <h2 style="color: #e1b12c; font-size: 24px; font-weight: 800;">Cargando Recuerdo...</h2>
             <div class="loader-bar-bg">
@@ -302,9 +295,18 @@
         let narrativeTimer = 0;
         let pulseAnim = 0; 
         let allyShootTimer = 0;
-        
+
+        // Triggers de los niveles
         let level24Triggered = false;
         let level30Triggered = false;
+        let level40Triggered = false;
+        let level45Triggered = false;
+        let level49Triggered = false;
+
+        // Variables de Habilidades y Efectos
+        let shieldTime = 0;
+        let magnetTime = 0;
+        let flashEffect = 0;
 
         const phrases = [
             "¿Quién era yo antes de esto?",
@@ -339,9 +341,17 @@
             narrativeTimer = 0;
             pulseAnim = 0;
             allyShootTimer = 0;
+
             level24Triggered = false;
             level30Triggered = false;
-            
+            level40Triggered = false;
+            level45Triggered = false;
+            level49Triggered = false;
+
+            shieldTime = 0;
+            magnetTime = 0;
+            flashEffect = 0;
+
             for(let i=0; i<40; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
@@ -387,20 +397,19 @@
             }
         });
 
-        // Simulación de pantalla de carga
         function startLoading() {
             menuContent.style.display = 'none';
             loaderScreen.style.display = 'flex';
-            
+
             let progress = 0;
             let textIdx = 0;
 
             let interval = setInterval(() => {
                 progress += Math.floor(Math.random() * 20) + 12;
                 if (progress > 100) progress = 100;
-                
+
                 loaderFill.style.width = progress + '%';
-                
+
                 if (textIdx < loadingTexts.length - 1 && progress > (textIdx + 1) * 25) {
                     textIdx++;
                     loaderStatus.innerText = loadingTexts[textIdx];
@@ -420,7 +429,7 @@
             menuContent.style.display = 'block';
             loaderScreen.style.display = 'none';
             loaderFill.style.width = '0%';
-            
+
             init();
             resize(); 
             spawnEntity(); 
@@ -430,9 +439,9 @@
         function gameOver() {
             gameActive = false;
             menu.style.display = 'flex';
-            
+
             document.getElementById('menu-title').innerHTML = `el último <span>recuerdo</span>`;
-            
+
             if (score < 10) {
                 verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste )</p>`;
             } else if (score <= 20) {
@@ -464,7 +473,7 @@
             });
         }
 
-        function triggerAllyItem(text, isSecond) {
+        function triggerSpecialItem(text, type) {
             revealMsg.innerText = text;
             revealMsg.classList.add('show');
             setTimeout(() => revealMsg.classList.remove('show'), 2500);
@@ -472,9 +481,8 @@
             entities.push({
                 x: canvas.width + 40,
                 y: Math.random() * (canvas.height - 150) + 75,
-                radius: 14,
-                type: 'ally_trigger',
-                isSecondAlly: isSecond,
+                radius: 15,
+                type: type,
                 speed: 4.5
             });
         }
@@ -482,11 +490,23 @@
         function checkLevelTriggers() {
             if (score >= 24 && !level24Triggered) {
                 level24Triggered = true;
-                triggerAllyItem("¡UN ALMA SE ACERCA!", false);
+                triggerSpecialItem("¡UN ALMA SE ACERCA!", 'ally_1');
             }
             if (score >= 30 && !level30Triggered) {
                 level30Triggered = true;
-                triggerAllyItem("¡OTRA PRESENCIA EMERGE!", true);
+                triggerSpecialItem("¡OTRA PRESENCIA EMERGE!", 'ally_2');
+            }
+            if (score >= 40 && !level40Triggered) {
+                level40Triggered = true;
+                triggerSpecialItem("¡ESCUDO ESPIRITUAL!", 'item_shield');
+            }
+            if (score >= 45 && !level45Triggered) {
+                level45Triggered = true;
+                triggerSpecialItem("¡DESTELLO LIMPIADOR!", 'item_nuke');
+            }
+            if (score >= 49 && !level49Triggered) {
+                level49Triggered = true;
+                triggerSpecialItem("¡ATRACCIÓN DE MEMORIA!", 'item_magnet');
             }
         }
 
@@ -497,6 +517,10 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             pulseAnim += 0.15;
+
+            // Actualizar contadores de habilidades
+            if (shieldTime > 0) shieldTime--;
+            if (magnetTime > 0) magnetTime--;
 
             // Estrellas
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
@@ -530,6 +554,20 @@
             if (player.y < player.radius + 15) player.y = player.radius + 15;
             if (player.y > canvas.height - player.radius - 15) player.y = canvas.height - player.radius - 15;
 
+            // Dibujar Aura/Escudo de Luz si está activo
+            if (shieldTime > 0) {
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, player.radius + 12 + Math.sin(pulseAnim) * 3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(46, 204, 113, 0.25)';
+                ctx.fill();
+                ctx.strokeStyle = '#2ecc71';
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#2ecc71';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
             // Personaje Principal (Blanco)
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
@@ -545,7 +583,7 @@
             ctx.arc(player.x + 6, player.y + 4, 2.5, 0, Math.PI * 2); 
             ctx.fill();
 
-            // Renderizar y actualizar los aliados conseguidos
+            // Renderizar Aliados
             if (allies.length > 0) {
                 allyShootTimer++;
                 let shouldAllyShoot = (allyShootTimer >= 45);
@@ -586,7 +624,7 @@
             for (let b = bullets.length - 1; b >= 0; b--) {
                 let bullet = bullets[b];
                 bullet.x += bullet.speed;
-                
+
                 ctx.fillStyle = bullet.fromAlly ? '#74b9ff' : '#3498db';
                 ctx.fillRect(bullet.x, bullet.y - 2, 14, 4);
 
@@ -617,7 +655,16 @@
             // Procesar Entidades
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
-                e.x -= e.speed;
+
+                // Imán Activo: Atraer recuerdos de color amarillo
+                if (magnetTime > 0 && e.type === 'memory') {
+                    let mdx = player.x - e.x;
+                    let mdy = player.y - e.y;
+                    e.x += mdx * 0.08;
+                    e.y += mdy * 0.08;
+                } else {
+                    e.x -= e.speed;
+                }
 
                 if (e.type === 'memory' && e.isUnstable) {
                     e.age += 1;
@@ -633,10 +680,23 @@
 
                 if (e.type === 'enemy') {
                     ctx.fillStyle = '#e74c3c';
-                } else if (e.type === 'ally_trigger') {
+                } else if (e.type === 'ally_1' || e.type === 'ally_2') {
                     ctx.fillStyle = '#54a0ff';
                     ctx.shadowBlur = 18;
                     ctx.shadowColor = '#54a0ff';
+                } else if (e.type === 'item_shield') {
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#2ecc71';
+                } else if (e.type === 'item_nuke') {
+                    let blink = Math.sin(pulseAnim * 2) > 0 ? '#ffffff' : '#e74c3c';
+                    ctx.fillStyle = blink;
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = blink;
+                } else if (e.type === 'item_magnet') {
+                    ctx.fillStyle = '#9b59b6';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#9b59b6';
                 } else if (e.isUnstable) {
                     let ratio = e.age / 240;
                     let r = Math.floor(225 + (231 - 225) * ratio);
@@ -661,16 +721,32 @@
 
                 if (distance < player.radius + e.radius) {
                     if (e.type === 'enemy') {
-                        gameOver();
-                        return;
-                    } else if (e.type === 'ally_trigger') {
-                        if (!e.isSecondAlly) {
-                            allies.push({ offsetXML: -25, offsetY: -35, radius: 10, angle: 0 });
-                            narrativeElement.innerText = '"Un aliado se ha unido a tu causa..."';
+                        if (shieldTime > 0) {
+                            entities.splice(i, 1); // Escudo rompe al enemigo
                         } else {
-                            allies.push({ offsetXML: -25, offsetY: 35, radius: 10, angle: Math.PI });
-                            narrativeElement.innerText = '"Los lazos de luz se fortalecen..."';
+                            gameOver();
+                            return;
                         }
+                    } else if (e.type === 'ally_1') {
+                        allies.push({ offsetXML: -25, offsetY: -35, radius: 10, angle: 0 });
+                        narrativeElement.innerText = '"Un aliado se ha unido a tu causa..."';
+                        entities.splice(i, 1);
+                    } else if (e.type === 'ally_2') {
+                        allies.push({ offsetXML: -25, offsetY: 35, radius: 10, angle: Math.PI });
+                        narrativeElement.innerText = '"Los lazos de luz se fortalecen..."';
+                        entities.splice(i, 1);
+                    } else if (e.type === 'item_shield') {
+                        shieldTime = 300; // 5 Segundos a 60 FPS
+                        narrativeElement.innerText = '"¡Escudo de Luz Activo!"';
+                        entities.splice(i, 1);
+                    } else if (e.type === 'item_nuke') {
+                        flashEffect = 15; // Destello de pantalla
+                        entities = entities.filter(ent => ent.type !== 'enemy'); // Elimina todos los enemigos rojos
+                        narrativeElement.innerText = '"¡Destello de Luz purificador!"';
+                        entities.splice(i, 1);
+                    } else if (e.type === 'item_magnet') {
+                        magnetTime = 360; // 6 Segundos de imán
+                        narrativeElement.innerText = '"¡Atracción de Recuerdos activada!"';
                         entities.splice(i, 1);
                     } else {
                         entities.splice(i, 1);
@@ -687,6 +763,13 @@
                 if (e.x < -50) {
                     entities.splice(i, 1);
                 }
+            }
+
+            // Efecto visual de Destello (Nuke)
+            if (flashEffect > 0) {
+                ctx.fillStyle = `rgba(255, 255, 255, ${flashEffect / 15})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                flashEffect--;
             }
 
             requestAnimationFrame(gameLoop);
