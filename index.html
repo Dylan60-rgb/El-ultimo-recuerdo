@@ -325,7 +325,7 @@
         const bossUi = document.getElementById('boss-ui');
         const bossFill = document.getElementById('boss-fill');
 
-        // --- SISTEMA DE SONIDO (WEB AUDIO API) ---
+        // --- SISTEMA DE SONIDO (WEB AUDIO API CORREGIDO) ---
         let audioCtx = null;
 
         function initAudio() {
@@ -337,7 +337,12 @@
             }
         }
 
+        // Activadores globales para desbloquear audio en teléfonos/navegadores
+        window.addEventListener('touchstart', initAudio, { passive: true });
+        window.addEventListener('click', initAudio, { passive: true });
+
         function playSound(type) {
+            initAudio(); // Forzar intento de inicio antes de sonar
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
 
@@ -357,8 +362,8 @@
                 let osc = audioCtx.createOscillator();
                 let gain = audioCtx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, now); // C5
-                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
                 gain.gain.setValueAtTime(0.25, now);
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
                 osc.connect(gain);
@@ -532,7 +537,7 @@
         });
 
         function startLoading() {
-            initAudio();
+            initAudio(); // Activar audio en el primer clic
             menuContent.style.display = 'none';
             loaderScreen.style.display = 'flex';
 
@@ -589,7 +594,7 @@
         }
 
         function spawnEntity() {
-            if (!gameActive || boss) return; // Parar generación común si el Jefe está activo
+            if (!gameActive || boss) return;
             let rand = Math.random();
             let type = 'enemy';
             let unstable = false;
@@ -616,13 +621,15 @@
             playSound('powerup');
             setTimeout(() => revealMsg.classList.remove('show'), 2500);
 
-            entities.push({
-                x: canvas.width + 40,
-                y: Math.random() * (canvas.height - 150) + 75,
-                radius: 15,
-                type: type,
-                speed: 4.5
-            });
+            if (type !== 'none') {
+                entities.push({
+                    x: canvas.width + 40,
+                    y: Math.random() * (canvas.height - 150) + 75,
+                    radius: 15,
+                    type: type,
+                    speed: 4.5
+                });
+            }
         }
 
         function checkLevelTriggers() {
