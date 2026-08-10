@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>El Último Recuerdo</title>
+    <title>El Último Recuerdo - Captura Aliada</title>
     <style>
         * {
             box-sizing: border-box;
@@ -44,6 +44,42 @@
             font-style: italic;
             transition: opacity 0.4s, transform 0.4s;
             text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+        }
+
+        /* Barra de Vida del Jefe */
+        #boss-ui {
+            position: absolute;
+            top: env(safe-area-inset-top, 20px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+        #boss-title {
+            color: #e74c3c;
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+            text-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
+        }
+        .boss-bar-bg {
+            width: 100%;
+            height: 14px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
+        }
+        .boss-bar-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #c0392b, #e74c3c);
+            transition: width 0.1s linear;
         }
 
         /* Mensaje cinematográfico */
@@ -120,9 +156,7 @@
                 -2px -2px 0px #000;
             margin-bottom: 20px;
         }
-        .slither-title span {
-            color: #e1b12c;
-        }
+        .slither-title span { color: #e1b12c; }
 
         .nickname-box {
             background: rgba(255, 255, 255, 0.12);
@@ -233,6 +267,14 @@
         <div id="narrative">"No dejes que el olvido te alcance..."</div>
     </div>
 
+    <!-- UI del Jefe -->
+    <div id="boss-ui">
+        <div id="boss-title">SOMBRA DEL OLVIDO</div>
+        <div class="boss-bar-bg">
+            <div class="boss-bar-fill" id="boss-fill"></div>
+        </div>
+    </div>
+
     <div id="reveal-msg">NO ESTÁS SOLO...</div>
 
     <div id="btn-shoot">DISPARAR<span>Rayo de luz</span></div>
@@ -280,6 +322,87 @@
         const btnShoot = document.getElementById('btn-shoot');
         const verdictSpace = document.getElementById('verdict-space');
         const revealMsg = document.getElementById('reveal-msg');
+        const bossUi = document.getElementById('boss-ui');
+        const bossFill = document.getElementById('boss-fill');
+
+        // --- SISTEMA DE SONIDO (WEB AUDIO API) ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'shoot') {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(450, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            } else if (type === 'collect') {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'powerup') {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'hit') {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(120, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'gameOver') {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -295,6 +418,10 @@
         let narrativeTimer = 0;
         let pulseAnim = 0; 
         let allyShootTimer = 0;
+
+        // Boss System Variables
+        let boss = null;
+        let level50BossTriggered = false;
 
         // Triggers de los niveles
         let level24Triggered = false;
@@ -342,6 +469,10 @@
             pulseAnim = 0;
             allyShootTimer = 0;
 
+            boss = null;
+            level50BossTriggered = false;
+            bossUi.style.display = 'none';
+
             level24Triggered = false;
             level30Triggered = false;
             level40Triggered = false;
@@ -361,7 +492,7 @@
                 });
             }
 
-            scoreElement.innerText = "Recuerdos: 0";
+            scoreElement.innerText = "Recuerdos: " + score;
             ammoElement.innerText = "Luz Espiritual: " + ammo;
             narrativeElement.innerText = '"No dejes que el olvido te gane..."';
             verdictSpace.innerHTML = "";
@@ -374,6 +505,7 @@
 
         function handleTouch(e) {
             if (!gameActive) return;
+            initAudio();
             for (let i = 0; i < e.touches.length; i++) {
                 let touch = e.touches[i];
                 if (touch.clientX < canvas.width * 0.7) {
@@ -384,9 +516,11 @@
 
         btnShoot.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            initAudio();
             if (gameActive && ammo > 0) {
                 ammo--;
                 ammoElement.innerText = "Luz Espiritual: " + ammo;
+                playSound('shoot');
                 bullets.push({
                     x: player.x + player.radius,
                     y: player.y,
@@ -398,6 +532,7 @@
         });
 
         function startLoading() {
+            initAudio();
             menuContent.style.display = 'none';
             loaderScreen.style.display = 'flex';
 
@@ -438,7 +573,9 @@
 
         function gameOver() {
             gameActive = false;
+            playSound('gameOver');
             menu.style.display = 'flex';
+            bossUi.style.display = 'none';
 
             document.getElementById('menu-title').innerHTML = `el último <span>recuerdo</span>`;
 
@@ -452,7 +589,7 @@
         }
 
         function spawnEntity() {
-            if (!gameActive) return;
+            if (!gameActive || boss) return; // Parar generación común si el Jefe está activo
             let rand = Math.random();
             let type = 'enemy';
             let unstable = false;
@@ -476,6 +613,7 @@
         function triggerSpecialItem(text, type) {
             revealMsg.innerText = text;
             revealMsg.classList.add('show');
+            playSound('powerup');
             setTimeout(() => revealMsg.classList.remove('show'), 2500);
 
             entities.push({
@@ -508,6 +646,27 @@
                 level49Triggered = true;
                 triggerSpecialItem("¡ATRACCIÓN DE MEMORIA!", 'item_magnet');
             }
+            if (score >= 50 && !level50BossTriggered) {
+                level50BossTriggered = true;
+                spawnBoss();
+            }
+        }
+
+        function spawnBoss() {
+            boss = {
+                x: canvas.width + 100,
+                targetX: canvas.width - 120,
+                y: canvas.height / 2,
+                radius: 45,
+                maxHp: 30,
+                hp: 30,
+                angle: 0,
+                shootTimer: 0
+            };
+            bossUi.style.display = 'flex';
+            bossFill.style.width = '100%';
+            triggerSpecialItem("¡AMENAZA SUPREMA!", 'none');
+            narrativeElement.innerText = '"La Sombra del Olvido ha despertado..."';
         }
 
         function gameLoop() {
@@ -554,7 +713,7 @@
             if (player.y < player.radius + 15) player.y = player.radius + 15;
             if (player.y > canvas.height - player.radius - 15) player.y = canvas.height - player.radius - 15;
 
-            // Dibujar Aura/Escudo de Luz si está activo
+            // Dibujar Escudo
             if (shieldTime > 0) {
                 ctx.beginPath();
                 ctx.arc(player.x, player.y, player.radius + 12 + Math.sin(pulseAnim) * 3, 0, Math.PI * 2);
@@ -568,7 +727,7 @@
                 ctx.shadowBlur = 0;
             }
 
-            // Personaje Principal (Blanco)
+            // Jugador
             ctx.beginPath();
             ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
@@ -620,6 +779,49 @@
                 }
             }
 
+            // Procesar y Renderizar Jefe
+            if (boss) {
+                if (boss.x > boss.targetX) boss.x -= 2;
+                boss.angle += 0.04;
+                boss.y = (canvas.height / 2) + Math.sin(boss.angle) * (canvas.height * 0.3);
+
+                // Dibujar Jefe
+                ctx.beginPath();
+                ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#8e44ad';
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#e74c3c';
+                ctx.fill();
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                // Ojo del Jefe
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(boss.x - 10, boss.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(boss.x - 12, boss.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ataque del Jefe
+                boss.shootTimer++;
+                if (boss.shootTimer >= 70) {
+                    boss.shootTimer = 0;
+                    entities.push({
+                        x: boss.x - boss.radius,
+                        y: boss.y,
+                        radius: 12,
+                        type: 'enemy',
+                        isUnstable: false,
+                        speed: 7
+                    });
+                }
+            }
+
             // Procesar Proyectiles
             for (let b = bullets.length - 1; b >= 0; b--) {
                 let bullet = bullets[b];
@@ -631,6 +833,29 @@
                 if (bullet.x > canvas.width + 20) {
                     bullets.splice(b, 1);
                     continue;
+                }
+
+                // Impacto en el Jefe
+                if (boss) {
+                    let bdx = bullet.x - boss.x;
+                    let bdy = bullet.y - boss.y;
+                    let bdist = Math.sqrt(bdx * bdx + bdy * bdy);
+                    if (bdist < boss.radius + bullet.radius) {
+                        bullets.splice(b, 1);
+                        boss.hp--;
+                        playSound('hit');
+                        bossFill.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%';
+
+                        if (boss.hp <= 0) {
+                            score += 25;
+                            scoreElement.innerText = "Recuerdos: " + score;
+                            boss = null;
+                            bossUi.style.display = 'none';
+                            flashEffect = 20;
+                            narrativeElement.innerText = '"¡La Sombra ha colapsado!"';
+                        }
+                        continue;
+                    }
                 }
 
                 for (let i = entities.length - 1; i >= 0; i--) {
@@ -645,6 +870,7 @@
                             bullets.splice(b, 1); 
                             score += 1; 
                             scoreElement.innerText = "Recuerdos: " + score;
+                            playSound('hit');
                             checkLevelTriggers();
                             break;
                         }
@@ -656,7 +882,6 @@
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
 
-                // Imán Activo: Atraer recuerdos de color amarillo
                 if (magnetTime > 0 && e.type === 'memory') {
                     let mdx = player.x - e.x;
                     let mdy = player.y - e.y;
@@ -722,7 +947,8 @@
                 if (distance < player.radius + e.radius) {
                     if (e.type === 'enemy') {
                         if (shieldTime > 0) {
-                            entities.splice(i, 1); // Escudo rompe al enemigo
+                            entities.splice(i, 1); 
+                            playSound('hit');
                         } else {
                             gameOver();
                             return;
@@ -730,23 +956,27 @@
                     } else if (e.type === 'ally_1') {
                         allies.push({ offsetXML: -25, offsetY: -35, radius: 10, angle: 0 });
                         narrativeElement.innerText = '"Un aliado se ha unido a tu causa..."';
+                        playSound('powerup');
                         entities.splice(i, 1);
                     } else if (e.type === 'ally_2') {
                         allies.push({ offsetXML: -25, offsetY: 35, radius: 10, angle: Math.PI });
                         narrativeElement.innerText = '"Los lazos de luz se fortalecen..."';
+                        playSound('powerup');
                         entities.splice(i, 1);
                     } else if (e.type === 'item_shield') {
-                        shieldTime = 300; // 5 Segundos a 60 FPS
+                        shieldTime = 300; 
                         narrativeElement.innerText = '"¡Escudo de Luz Activo!"';
+                        playSound('powerup');
                         entities.splice(i, 1);
                     } else if (e.type === 'item_nuke') {
-                        flashEffect = 15; // Destello de pantalla
-                        entities = entities.filter(ent => ent.type !== 'enemy'); // Elimina todos los enemigos rojos
+                        flashEffect = 15; 
+                        entities = entities.filter(ent => ent.type !== 'enemy');
                         narrativeElement.innerText = '"¡Destello de Luz purificador!"';
-                        entities.splice(i, 1);
+                        playSound('powerup');
                     } else if (e.type === 'item_magnet') {
-                        magnetTime = 360; // 6 Segundos de imán
+                        magnetTime = 360; 
                         narrativeElement.innerText = '"¡Atracción de Recuerdos activada!"';
+                        playSound('powerup');
                         entities.splice(i, 1);
                     } else {
                         entities.splice(i, 1);
@@ -755,6 +985,7 @@
                         scoreElement.innerText = "Recuerdos: " + score;
                         ammoElement.innerText = "Luz Espiritual: " + ammo;
                         speedMultiplier += 0.025; 
+                        playSound('collect');
                         checkLevelTriggers();
                     }
                     continue;
@@ -765,7 +996,7 @@
                 }
             }
 
-            // Efecto visual de Destello (Nuke)
+            // Destello (Nuke)
             if (flashEffect > 0) {
                 ctx.fillStyle = `rgba(255, 255, 255, ${flashEffect / 15})`;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
