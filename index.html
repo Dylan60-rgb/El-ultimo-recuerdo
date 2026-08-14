@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>El Último Recuerdo - Captura Aliada</title>
+    <title>El Último Recuerdo</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,7 +11,6 @@
             padding: 0;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: none;
         }
         body, html {
             width: 100%;
@@ -19,7 +18,41 @@
             overflow: hidden;
             background-color: #0b0914;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            touch-action: none;
         }
+
+        /* BANNER DE ADVERTENCIA PARA PANTALLA VERTICAL */
+        #rotate-warning {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #08060f;
+            color: #ffffff;
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        #rotate-warning .phone-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            animation: rotateAnim 2s infinite ease-in-out;
+        }
+        #rotate-warning h2 { font-size: 22px; color: #e1b12c; margin-bottom: 10px; }
+        #rotate-warning p { font-size: 14px; color: #ccc; max-width: 300px; }
+
+        @keyframes rotateAnim {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(-90deg); }
+        }
+
+        @media screen and (orientation: portrait) {
+            #rotate-warning { display: flex !important; }
+        }
+
         #canvas {
             display: block;
             width: 100%;
@@ -29,27 +62,79 @@
         }
         #ui-overlay {
             position: absolute;
-            top: env(safe-area-inset-top, 20px);
-            left: 20px;
+            top: env(safe-area-inset-top, 15px);
+            left: env(safe-area-inset-left, 20px);
             color: #fff;
             pointer-events: none;
             z-index: 5;
         }
-        #score { font-size: 24px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-        #ammo { font-size: 16px; font-weight: bold; color: #3498db; margin-top: 2px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+        #score { font-size: 20px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+        #ammo { font-size: 14px; font-weight: bold; color: #3498db; margin-top: 2px; text-shadow: 0 1px 3px rgba(0,0,0,0.6); }
         #narrative { 
-            font-size: 14px; 
+            font-size: 13px; 
             color: #b3aebf; 
-            margin-top: 6px; 
+            margin-top: 4px; 
             font-style: italic;
             transition: opacity 0.4s, transform 0.4s;
             text-shadow: 0 1px 3px rgba(0,0,0,0.6);
         }
 
-        /* Barra de Vida del Jefe */
+        /* BOTÓN DE PAUSA/SALIR CENTRADO ARRIBA EN LA PARED */
+        #pause-btn-top {
+            position: absolute;
+            top: env(safe-area-inset-top, 0px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(231, 76, 60, 0.25);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 2px solid #e74c3c;
+            border-top: none;
+            border-radius: 0 0 18px 18px;
+            padding: 6px 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 25;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #pause-btn-top:active { background: rgba(231, 76, 60, 0.6); }
+
+        /* MODAL DE PAUSA / SALIR */
+        #pause-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(8, 6, 15, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 40;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .pause-card {
+            background: linear-gradient(180deg, #1b152d 0%, #08060f 100%);
+            border: 3px solid #e1b12c;
+            border-radius: 20px;
+            padding: 20px;
+            width: 90%;
+            max-width: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            box-shadow: 0 0 20px rgba(225, 177, 44, 0.3);
+        }
+        .pause-title { font-size: 20px; font-weight: 900; color: #e1b12c; margin-bottom: 15px; }
+
         #boss-ui {
             position: absolute;
-            top: env(safe-area-inset-top, 20px);
+            top: env(safe-area-inset-top, 15px);
             left: 50%;
             transform: translateX(-50%);
             width: 280px;
@@ -58,40 +143,16 @@
             align-items: center;
             z-index: 10;
         }
-        #boss-title {
-            color: #e74c3c;
-            font-size: 14px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            margin-bottom: 4px;
-            text-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
-        }
-        .boss-bar-bg {
-            width: 100%;
-            height: 14px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid #e74c3c;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
-        }
-        .boss-bar-fill {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #c0392b, #e74c3c);
-            transition: width 0.1s linear;
-        }
 
-        /* Mensaje cinematográfico */
         #reveal-msg {
             position: absolute;
-            top: 40%;
+            top: 35%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.7);
             color: #54a0ff;
-            font-size: 32px;
+            font-size: 26px;
             font-weight: 900;
-            letter-spacing: 6px;
+            letter-spacing: 4px;
             text-shadow: 0 0 25px rgba(84, 160, 255, 0.8);
             opacity: 0;
             pointer-events: none;
@@ -99,37 +160,45 @@
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             text-align: center;
         }
-        #reveal-msg.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
+        #reveal-msg.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
-        #btn-shoot {
+        .controls-container {
             position: absolute;
             right: env(safe-area-inset-right, 25px);
-            bottom: env(safe-area-inset-bottom, 25px);
+            bottom: env(safe-area-inset-bottom, 15px);
+            display: flex;
+            gap: 15px;
+            z-index: 15;
+        }
+
+        .action-btn {
             background: rgba(52, 152, 219, 0.25);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             border: 2px solid #3498db;
-            border-radius: 25px;
-            width: 140px;
-            height: 85px;
+            border-radius: 20px;
+            width: 100px;
+            height: 70px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             color: white;
             font-weight: bold;
-            font-size: 18px;
-            letter-spacing: 1px;
+            font-size: 13px;
+            letter-spacing: 0.5px;
             box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-            z-index: 15;
         }
-        #btn-shoot span { font-size: 11px; opacity: 0.8; margin-top: 3px; font-weight: normal; }
-        #btn-shoot:active { background: rgba(52, 152, 219, 0.5); }
+        .action-btn span { font-size: 10px; opacity: 0.8; margin-top: 2px; font-weight: normal; }
+        .action-btn:active { background: rgba(52, 152, 219, 0.5); }
 
-        /* Estilos del Menú */
+        #btn-power {
+            background: rgba(155, 89, 182, 0.25);
+            border-color: #9b59b6;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+        #btn-power:active { background: rgba(155, 89, 182, 0.5); }
+
         #menu {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -140,12 +209,12 @@
             align-items: center;
             color: white;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             z-index: 20;
         }
 
         .slither-title {
-            font-size: clamp(34px, 7vw, 60px);
+            font-size: clamp(24px, 5vw, 42px);
             font-weight: 900;
             color: #ffffff;
             text-transform: lowercase;
@@ -154,110 +223,216 @@
                 0 0 15px rgba(225, 177, 44, 0.6),
                 3px 3px 0px #ab7d07,
                 -2px -2px 0px #000;
-            margin-bottom: 20px;
+            margin-bottom: 5px;
         }
         .slither-title span { color: #e1b12c; }
+
+        .total-bank {
+            font-size: 15px;
+            color: #e1b12c;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(225, 177, 44, 0.4);
+        }
 
         .nickname-box {
             background: rgba(255, 255, 255, 0.12);
             border: 2px solid rgba(225, 177, 44, 0.5);
             border-radius: 30px;
-            padding: 12px 25px;
-            font-size: 18px;
+            padding: 8px 18px;
+            font-size: 15px;
             color: #fff;
             text-align: center;
-            width: 280px;
+            width: 240px;
             outline: none;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             backdrop-filter: blur(5px);
-            transition: all 0.3s;
         }
-        .nickname-box:focus {
-            border-color: #e1b12c;
-            box-shadow: 0 0 15px rgba(225, 177, 44, 0.4);
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .nickname-box::placeholder { color: rgba(255, 255, 255, 0.5); }
+
+        .menu-buttons-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
         .btn-slither {
-            width: 260px;
-            padding: 16px 20px;
-            margin: 10px 0;
-            font-size: 20px;
+            width: 170px;
+            padding: 10px 12px;
+            margin: 3px 0;
+            font-size: 14px;
             font-weight: 800;
             color: #ffffff;
             border: none;
             border-radius: 40px;
             cursor: pointer;
             text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            box-shadow: 0 6px 0px rgba(0,0,0,0.3), 0 8px 15px rgba(0,0,0,0.4);
-            transition: transform 0.1s, filter 0.2s;
+            box-shadow: 0 5px 0px rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
             background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
             border: 2px solid #58d68d;
         }
-        .btn-slither:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0px rgba(0,0,0,0.3);
+        .btn-slither:active { transform: translateY(3px); box-shadow: 0 2px 0px rgba(0,0,0,0.3); }
+
+        .btn-wardrobe { background: linear-gradient(180deg, #9b59b6 0%, #8e44ad 100%); border: 2px solid #be2ed6; }
+        .btn-powershop { background: linear-gradient(180deg, #e67e22 0%, #d35400 100%); border: 2px solid #f39c12; }
+        .btn-quests { background: linear-gradient(180deg, #3498db 0%, #2980b9 100%); border: 2px solid #54a0ff; }
+        .btn-quit { background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%); border: 2px solid #ff6b6b; }
+
+        #powershop-screen, #wardrobe-screen, #quests-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 480px;
         }
+
+        /* PERMITIR EL SCROLL EN PANTALLAS TÁCTILES */
+        .powers-grid, .skins-grid, .quests-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            margin: 10px 0;
+            max-height: 180px;
+            overflow-y: auto;
+            padding: 5px 10px 5px 5px;
+            touch-action: pan-y !important; /* PERMITE SCROLL TÁCTIL VERTICAL */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* BARRA DE SCROLL ESTILIZADA PARA QUE SE VEA BIEN EN CELULARES */
+        .powers-grid::-webkit-scrollbar, 
+        .skins-grid::-webkit-scrollbar, 
+        .quests-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .powers-grid::-webkit-scrollbar-track, 
+        .skins-grid::-webkit-scrollbar-track, 
+        .quests-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .powers-grid::-webkit-scrollbar-thumb, 
+        .skins-grid::-webkit-scrollbar-thumb, 
+        .quests-grid::-webkit-scrollbar-thumb {
+            background: #e1b12c;
+            border-radius: 10px;
+        }
+
+        .power-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(5px);
+            flex-shrink: 0;
+        }
+        .power-info { text-align: left; }
+        .power-title { font-size: 13px; font-weight: bold; color: #fff; }
+        .power-desc { font-size: 10px; color: #ccc; margin-top: 1px; }
+        .power-count { font-size: 11px; color: #f1c40f; font-weight: bold; margin-top: 2px; }
+
+        .skin-btn {
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 20px;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+        }
+        .skin-btn.buy { background: #e67e22; }
+        .skin-btn.use { background: #2ecc71; }
+        .skin-btn.active { background: #7f8c8d; }
+        .skin-btn.claim { background: #f1c40f; color: #000; font-weight: 900; animation: pulse 1s infinite alternate; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
+
+        /* BARRITAS DE PROGRESO DE MISIONES */
+        .quest-progress-bg {
+            width: 100%; height: 6px; background: rgba(255,255,255,0.1);
+            border-radius: 5px; overflow: hidden; margin-top: 5px;
+        }
+        .quest-progress-fill { height: 100%; background: #3498db; border-radius: 5px; transition: width 0.3s; }
 
         .icon-btn-top {
             position: absolute;
-            top: 25px;
-            right: 25px;
+            top: env(safe-area-inset-top, 15px);
+            right: env(safe-area-inset-right, 20px);
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
-            width: 55px;
-            height: 55px;
+            width: 42px;
+            height: 42px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             color: #fff;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: bold;
             cursor: pointer;
             backdrop-filter: blur(5px);
+            z-index: 25;
         }
-        .icon-btn-top svg { width: 22px; height: 22px; fill: #fff; margin-bottom: 2px; }
+        .icon-btn-top svg { width: 16px; height: 16px; fill: #fff; }
 
-        #loader-screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
+        #loader-screen { display: none; flex-direction: column; align-items: center; }
         .loader-bar-bg {
-            width: 280px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid #e1b12c;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-top: 20px;
-            padding: 2px;
-            box-shadow: 0 0 15px rgba(225, 177, 44, 0.3);
+            width: 220px; height: 14px; background: rgba(255,255,255,0.1);
+            border: 2px solid #e1b12c; border-radius: 12px; overflow: hidden; margin-top: 10px; padding: 2px;
         }
-        .loader-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #e1b12c, #f39c12);
-            border-radius: 10px;
-            transition: width 0.2s ease-out;
-        }
-        .loader-text {
-            color: #ccc;
-            font-size: 14px;
-            margin-top: 12px;
-            font-style: italic;
-        }
+        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e1b12c, #f39c12); border-radius: 10px; transition: width 0.2s; }
+        .loader-text { color: #ccc; font-size: 12px; margin-top: 8px; font-style: italic; }
 
-        .game-over-msg { font-size: 18px; font-weight: bold; color: #ff7675; margin-top: 15px; }
-        .victory-msg { font-size: 20px; font-weight: bold; color: #2ecc71; margin-top: 15px; text-shadow: 0 0 10px rgba(46,204,113,0.4); }
+        .game-over-msg { font-size: 16px; font-weight: bold; color: #ff7675; margin-top: 8px; }
+        .victory-msg { font-size: 18px; font-weight: bold; color: #2ecc71; margin-top: 8px; }
+
+        #settings-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 30;
+            justify-content: center; align-items: center;
+        }
+        .settings-card {
+            background: linear-gradient(180deg, #2575fc 0%, #1a4ba0 100%);
+            border: 3px solid #73a5ff; border-radius: 20px; padding: 15px; width: 90%; max-width: 300px;
+            display: flex; flex-direction: column; align-items: center; color: white; position: relative;
+        }
+        .settings-title { font-size: 18px; font-weight: 900; letter-spacing: 1px; margin-bottom: 10px; }
+        .setting-row {
+            width: 100%; background: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .setting-label { font-weight: 800; font-size: 12px; }
+        .setting-slider { width: 75px; accent-color: #2ecc71; }
+        .toggle-btn { background: #2ecc71; color: white; border: 2px solid #fff; border-radius: 10px; padding: 3px 10px; font-weight: 900; font-size: 11px; }
+        .toggle-btn.off { background: #e74c3c; }
+        .close-settings-btn {
+            position: absolute; bottom: -15px; background: #e74c3c; border: 2px solid #fff;
+            width: 34px; height: 34px; border-radius: 50%; color: white; font-size: 16px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center; cursor: pointer;
+        }
     </style>
 </head>
 <body>
+
+    <div id="rotate-warning">
+        <div class="phone-icon">📱</div>
+        <h2>¡GIRA TU CELULAR!</h2>
+        <p>Para la mejor experiencia de juego, por favor pon tu teléfono en posición horizontal (acostado).</p>
+    </div>
+
+    <div id="pause-btn-top" onclick="pauseGame(event)">⏸️ SALIR</div>
+
+    <div id="pause-modal">
+        <div class="pause-card">
+            <div class="pause-title">Juego En Pausa</div>
+            <button class="btn-slither" onclick="resumeGame()">▶️ Reanudar</button>
+            <button class="btn-slither btn-quit" onclick="quitToMenu()">🚪 Salir al Menú</button>
+        </div>
+    </div>
 
     <canvas id="canvas"></canvas>
 
@@ -267,7 +442,6 @@
         <div id="narrative">"No dejes que el olvido te alcance..."</div>
     </div>
 
-    <!-- UI del Jefe -->
     <div id="boss-ui">
         <div id="boss-title">SOMBRA DEL OLVIDO</div>
         <div class="boss-bar-bg">
@@ -277,33 +451,83 @@
 
     <div id="reveal-msg">NO ESTÁS SOLO...</div>
 
-    <div id="btn-shoot">DISPARAR<span>Rayo de luz</span></div>
+    <div class="controls-container">
+        <div class="action-btn" id="btn-power">USAR PODER<span id="power-btn-label">Sin Poder</span></div>
+        <div class="action-btn" id="btn-shoot">DISPARAR<span>Rayo de luz</span></div>
+    </div>
 
-    <!-- Menú -->
-    <div id="menu">
-        <div class="icon-btn-top" onclick="alert('Opciones de juego')">
-            <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-            Ajustes
+    <div class="icon-btn-top" onclick="openSettings()">
+        <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+        Ajustes
+    </div>
+
+    <div id="settings-modal">
+        <div class="settings-card">
+            <div class="settings-title">Configuración</div>
+
+            <div class="setting-row">
+                <div class="setting-label">🔊 SONIDO</div>
+                <input type="range" class="setting-slider" id="sfx-volume" min="0" max="1" step="0.1" value="1" oninput="changeSfxVol(this.value)">
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-label">🎵 MÚSICA</div>
+                <input type="range" class="setting-slider" id="music-volume" min="0" max="1" step="0.1" value="0.5" oninput="changeMusicVol(this.value)">
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-label">📳 VIBRACIÓN</div>
+                <button class="toggle-btn" id="vibe-btn" onclick="toggleVibration()">ON</button>
+            </div>
+
+            <div class="close-settings-btn" onclick="closeSettings()">✕</div>
         </div>
+    </div>
 
+    <div id="menu">
         <div id="menu-content">
             <h1 class="slither-title" id="menu-title">el último <span>recuerdo</span></h1>
+            <div class="total-bank" id="bank-display">💎 Recuerdos Totales: 10</div>
 
             <input type="text" id="nickname" class="nickname-box" placeholder="Tu Apodo..." maxlength="15" value="Jugador 1">
 
             <br>
-            <button class="btn-slither" onclick="startLoading()">
-                ¡Jugar!
-            </button>
+            <button class="btn-slither" onclick="startLoading()">¡Jugar!</button>
+            
+            <div class="menu-buttons-row">
+                <button class="btn-slither btn-wardrobe" onclick="openWardrobe()">👕 Vestidor</button>
+                <button class="btn-slither btn-powershop" onclick="openPowerShop()">⚡ Poderes</button>
+                <button class="btn-slither btn-quests" onclick="openQuests()">📜 Misiones</button>
+            </div>
 
             <div id="verdict-space"></div>
         </div>
 
+        <div id="wardrobe-screen">
+            <h2 style="color: #be2ed6; font-size: 20px; font-weight: 800;">Vestidor</h2>
+            <div class="total-bank" id="wardrobe-bank-display">💎 Recuerdos: 10</div>
+            <div class="skins-grid" id="skins-container"></div>
+            <button class="btn-slither" onclick="closeWardrobe()" style="background: #7f8c8d; border-color: #95a5a6; width:140px; padding:6px;">Volver</button>
+        </div>
+
+        <div id="powershop-screen">
+            <h2 style="color: #f39c12; font-size: 20px; font-weight: 800;">Tienda de Poderes</h2>
+            <div class="total-bank" id="powershop-bank-display">💎 Recuerdos: 10</div>
+            <div class="powers-grid" id="powers-container"></div>
+            <button class="btn-slither" onclick="closePowerShop()" style="background: #7f8c8d; border-color: #95a5a6; width:140px; padding:6px;">Volver</button>
+        </div>
+
+        <!-- PANTALLA DE MISIONES -->
+        <div id="quests-screen">
+            <h2 style="color: #54a0ff; font-size: 20px; font-weight: 800;">Misiones y Desafíos</h2>
+            <div class="total-bank" id="quests-bank-display">💎 Recuerdos: 10</div>
+            <div class="quests-grid" id="quests-container"></div>
+            <button class="btn-slither" onclick="closeQuests()" style="background: #7f8c8d; border-color: #95a5a6; width:140px; padding:6px;">Volver</button>
+        </div>
+
         <div id="loader-screen">
-            <h2 style="color: #e1b12c; font-size: 24px; font-weight: 800;">Cargando Recuerdo...</h2>
-            <div class="loader-bar-bg">
-                <div class="loader-bar-fill" id="loader-fill"></div>
-            </div>
+            <h2 style="color: #e1b12c; font-size: 18px; font-weight: 800;">Cargando Recuerdo...</h2>
+            <div class="loader-bar-bg"><div class="loader-bar-fill" id="loader-fill"></div></div>
             <p class="loader-text" id="loader-status">Sincronizando fragmentos...</p>
         </div>
     </div>
@@ -316,185 +540,373 @@
         const ammoElement = document.getElementById('ammo');
         const menu = document.getElementById('menu');
         const menuContent = document.getElementById('menu-content');
+        const wardrobeScreen = document.getElementById('wardrobe-screen');
+        const powershopScreen = document.getElementById('powershop-screen');
+        const questsScreen = document.getElementById('quests-screen');
+        const skinsContainer = document.getElementById('skins-container');
+        const powersContainer = document.getElementById('powers-container');
+        const questsContainer = document.getElementById('quests-container');
+        const bankDisplay = document.getElementById('bank-display');
+        const wardrobeBankDisplay = document.getElementById('wardrobe-bank-display');
+        const powershopBankDisplay = document.getElementById('powershop-bank-display');
+        const questsBankDisplay = document.getElementById('quests-bank-display');
         const loaderScreen = document.getElementById('loader-screen');
         const loaderFill = document.getElementById('loader-fill');
         const loaderStatus = document.getElementById('loader-status');
         const btnShoot = document.getElementById('btn-shoot');
+        const btnPower = document.getElementById('btn-power');
+        const powerBtnLabel = document.getElementById('power-btn-label');
         const verdictSpace = document.getElementById('verdict-space');
         const revealMsg = document.getElementById('reveal-msg');
-        const bossUi = document.getElementById('boss-ui');
-        const bossFill = document.getElementById('boss-fill');
+        const pauseModal = document.getElementById('pause-modal');
+        const pauseBtnTop = document.getElementById('pause-btn-top');
 
-        // --- SISTEMA DE SONIDO (WEB AUDIO API CORREGIDO) ---
-        let audioCtx = null;
+        const SKINS = [
+            { id: 'white', name: 'Luz Pura', color: '#ffffff', price: 0 },
+            { id: 'cyan', name: 'Espectro', color: '#00d2d3', price: 15 },
+            { id: 'pink', name: 'Anhelo', color: '#ff9ff3', price: 30 },
+            { id: 'gold', name: 'Aureo', color: '#feca57', price: 60 },
+            { id: 'lime', name: 'Esperanza', color: '#1dd1a1', price: 100 }
+        ];
+
+        const POWERS = [
+            { id: 'shield', name: 'Escudo Espiritual', desc: 'Protege de 1 golpe directo', price: 20, type: 'item_shield' },
+            { id: 'nuke', name: 'Destello Limpiador', desc: 'Elimina pelotitas rojas en pantalla', price: 35, type: 'item_nuke' },
+            { id: 'magnet', name: 'Atracción de Memoria', desc: 'Atrae pelotitas amarillas hacia ti', price: 25, type: 'item_magnet' }
+        ];
+
+        // MISIONES
+        let QUESTS = [
+            { id: 'shoot50', title: '🎯 Gatillo Fácil', desc: 'Dispara 50 veces el rayo de luz', target: 50, reward: 15, key: 'statShots' },
+            { id: 'collect30', title: '🟡 Cazador de Memorias', desc: 'Consigue 30 recuerdos amarillos', target: 30, reward: 20, key: 'statYellows' },
+            { id: 'die5', title: '💀 Aprender de los Errores', desc: 'Muere 5 veces intentándolo', target: 5, reward: 10, key: 'statDeaths' }
+        ];
+
+        let totalMemories = parseInt(localStorage.getItem('totalMemories')) || 10;
+        let unlockedSkins = JSON.parse(localStorage.getItem('unlockedSkins')) || ['white'];
+        let activeSkinId = localStorage.getItem('activeSkinId') || 'white';
+        let inventoryPowers = JSON.parse(localStorage.getItem('inventoryPowers')) || { shield: 0, nuke: 0, magnet: 0 };
+        let equippedPowerId = localStorage.getItem('equippedPowerId') || 'shield';
+
+        // ESTADÍSTICAS Y MISIONES GUARDADAS
+        let gameStats = JSON.parse(localStorage.getItem('gameStats')) || { statShots: 0, statYellows: 0, statDeaths: 0 };
+        let claimedQuests = JSON.parse(localStorage.getItem('claimedQuests')) || [];
+
+        let sfxVolume = parseFloat(localStorage.getItem('sfxVolume')) ?? 1.0;
+        let musicVolume = parseFloat(localStorage.getItem('musicVolume')) ?? 0.5;
+        let vibrationEnabled = localStorage.getItem('vibrationEnabled') !== 'false';
+
+        document.getElementById('sfx-volume').value = sfxVolume;
+        document.getElementById('music-volume').value = musicVolume;
+        const vibeBtn = document.getElementById('vibe-btn');
+        if(!vibrationEnabled) { vibeBtn.classList.add('off'); vibeBtn.innerText = 'OFF'; }
+
+        window.addEventListener('click', () => initAudio(), { once: false });
+        window.addEventListener('touchstart', () => initAudio(), { once: false });
+
+        function lockLandscape() {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(() => {});
+            }
+        }
+
+        function openSettings() { initAudio(); document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeSettings() { initAudio(); document.getElementById('settings-modal').style.display = 'none'; }
+        function changeSfxVol(val) { sfxVolume = parseFloat(val); localStorage.setItem('sfxVolume', sfxVolume); }
+        function changeMusicVol(val) {
+            musicVolume = parseFloat(val);
+            localStorage.setItem('musicVolume', musicVolume);
+            if (musicGainNode && audioCtx) musicGainNode.gain.setValueAtTime(musicVolume * 0.25, audioCtx.currentTime);
+        }
+
+        function toggleVibration() {
+            initAudio();
+            vibrationEnabled = !vibrationEnabled;
+            localStorage.setItem('vibrationEnabled', vibrationEnabled);
+            if(vibrationEnabled) { vibeBtn.classList.remove('off'); vibeBtn.innerText = 'ON'; vibrate(50); } 
+            else { vibeBtn.classList.add('off'); vibeBtn.innerText = 'OFF'; }
+        }
+
+        function vibrate(ms) {
+            if (vibrationEnabled && 'vibrate' in navigator) { try { navigator.vibrate(ms); } catch(e) {} }
+        }
+
+        function updateBankDisplays() {
+            bankDisplay.innerText = `💎 Recuerdos Totales: ${totalMemories}`;
+            wardrobeBankDisplay.innerText = `💎 Recuerdos: ${totalMemories}`;
+            powershopBankDisplay.innerText = `💎 Recuerdos: ${totalMemories}`;
+            questsBankDisplay.innerText = `💎 Recuerdos: ${totalMemories}`;
+            updatePowerButtonLabel();
+        }
+
+        function updatePowerButtonLabel() {
+            const currentP = POWERS.find(p => p.id === equippedPowerId);
+            const count = inventoryPowers[equippedPowerId] || 0;
+            if(currentP) {
+                powerBtnLabel.innerText = `${currentP.name.split(' ')[0]} (x${count})`;
+            } else {
+                powerBtnLabel.innerText = 'Sin Poder';
+            }
+        }
+
+        function saveGameData() {
+            localStorage.setItem('totalMemories', totalMemories);
+            localStorage.setItem('unlockedSkins', JSON.stringify(unlockedSkins));
+            localStorage.setItem('activeSkinId', activeSkinId);
+            localStorage.setItem('inventoryPowers', JSON.stringify(inventoryPowers));
+            localStorage.setItem('equippedPowerId', equippedPowerId);
+            localStorage.setItem('gameStats', JSON.stringify(gameStats));
+            localStorage.setItem('claimedQuests', JSON.stringify(claimedQuests));
+            updateBankDisplays();
+        }
+
+        // RENDERING DE MISIONES
+        function renderQuests() {
+            questsContainer.innerHTML = '';
+            QUESTS.forEach(q => {
+                const currentVal = gameStats[q.key] || 0;
+                const isCompleted = currentVal >= q.target;
+                const isClaimed = claimedQuests.includes(q.id);
+                const percent = Math.min(100, Math.floor((currentVal / q.target) * 100));
+
+                const card = document.createElement('div');
+                card.className = 'power-card';
+                card.innerHTML = `
+                    <div class="power-info" style="width: 60%;">
+                        <div class="power-title">${q.title}</div>
+                        <div class="power-desc">${q.desc}</div>
+                        <div class="power-count">Progreso: ${Math.min(currentVal, q.target)}/${q.target}</div>
+                        <div class="quest-progress-bg">
+                            <div class="quest-progress-fill" style="width: ${percent}%;"></div>
+                        </div>
+                    </div>
+                `;
+
+                const btn = document.createElement('button');
+                btn.className = 'skin-btn';
+
+                if (isClaimed) {
+                    btn.classList.add('active'); btn.innerText = 'Completado ✔️';
+                } else if (isCompleted) {
+                    btn.classList.add('claim'); btn.innerText = `Reclamar 💎${q.reward}`;
+                    btn.onclick = () => claimQuestReward(q);
+                } else {
+                    btn.classList.add('buy'); btn.style.background = '#555'; btn.innerText = `💎${q.reward}`;
+                }
+
+                card.appendChild(btn);
+                questsContainer.appendChild(card);
+            });
+        }
+
+        function claimQuestReward(q) {
+            initAudio();
+            if (!claimedQuests.includes(q.id)) {
+                claimedQuests.push(q.id);
+                totalMemories += q.reward;
+                saveGameData();
+                renderQuests();
+                playSound('powerup');
+            }
+        }
+
+        function openQuests() { initAudio(); menuContent.style.display = 'none'; questsScreen.style.display = 'flex'; renderQuests(); }
+        function closeQuests() { initAudio(); questsScreen.style.display = 'none'; menuContent.style.display = 'block'; }
+
+        function renderPowerShop() {
+            powersContainer.innerHTML = '';
+            POWERS.forEach(p => {
+                const count = inventoryPowers[p.id] || 0;
+                const isEquipped = equippedPowerId === p.id;
+
+                const card = document.createElement('div');
+                card.className = 'power-card';
+                card.innerHTML = `
+                    <div class="power-info">
+                        <div class="power-title">${p.name} ${isEquipped ? '✔️' : ''}</div>
+                        <div class="power-desc">${p.desc}</div>
+                        <div class="power-count">Tienes: ${count}</div>
+                    </div>
+                `;
+
+                const btnGroup = document.createElement('div');
+                btnGroup.style.display = 'flex';
+                btnGroup.style.gap = '5px';
+
+                const buyBtn = document.createElement('button');
+                buyBtn.className = 'skin-btn buy';
+                buyBtn.innerText = `💎${p.price}`;
+                buyBtn.onclick = () => buyPower(p);
+
+                const equipBtn = document.createElement('button');
+                equipBtn.className = 'skin-btn use';
+                equipBtn.innerText = isEquipped ? 'Equipado' : 'Equipar';
+                equipBtn.onclick = () => { equippedPowerId = p.id; saveGameData(); renderPowerShop(); };
+
+                btnGroup.appendChild(buyBtn);
+                btnGroup.appendChild(equipBtn);
+                card.appendChild(btnGroup);
+                powersContainer.appendChild(card);
+            });
+        }
+
+        function buyPower(power) {
+            initAudio();
+            if (totalMemories >= power.price) {
+                totalMemories -= power.price;
+                inventoryPowers[power.id] = (inventoryPowers[power.id] || 0) + 1;
+                saveGameData();
+                renderPowerShop();
+                playSound('powerup');
+            } else { playSound('hit'); }
+        }
+
+        function openPowerShop() { initAudio(); menuContent.style.display = 'none'; powershopScreen.style.display = 'flex'; renderPowerShop(); }
+        function closePowerShop() { initAudio(); powershopScreen.style.display = 'none'; menuContent.style.display = 'block'; }
+
+        function renderWardrobe() {
+            skinsContainer.innerHTML = '';
+            SKINS.forEach(skin => {
+                const isUnlocked = unlockedSkins.includes(skin.id);
+                const isActive = activeSkinId === skin.id;
+
+                const card = document.createElement('div');
+                card.className = 'power-card';
+                card.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="width:22px; height:22px; border-radius:50%; background:${skin.color}; border:2px solid #fff;"></div>
+                        <div class="power-title">${skin.name}</div>
+                    </div>
+                `;
+
+                const btn = document.createElement('button');
+                btn.className = 'skin-btn';
+
+                if (isActive) {
+                    btn.classList.add('active'); btn.innerText = 'En uso';
+                } else if (isUnlocked) {
+                    btn.classList.add('use'); btn.innerText = 'Usar';
+                    btn.onclick = () => { activeSkinId = skin.id; saveGameData(); renderWardrobe(); };
+                } else {
+                    btn.classList.add('buy'); btn.innerText = `💎 ${skin.price}`;
+                    btn.onclick = () => {
+                        if (totalMemories >= skin.price) {
+                            totalMemories -= skin.price;
+                            unlockedSkins.push(skin.id);
+                            activeSkinId = skin.id;
+                            saveGameData(); renderWardrobe(); playSound('powerup');
+                        } else { playSound('hit'); }
+                    };
+                }
+
+                card.appendChild(btn);
+                skinsContainer.appendChild(card);
+            });
+        }
+
+        function openWardrobe() { initAudio(); menuContent.style.display = 'none'; wardrobeScreen.style.display = 'flex'; renderWardrobe(); }
+        function closeWardrobe() { initAudio(); wardrobeScreen.style.display = 'none'; menuContent.style.display = 'block'; }
+
+        function getActiveSkinColor() {
+            const skin = SKINS.find(s => s.id === activeSkinId);
+            return skin ? skin.color : '#ffffff';
+        }
+
+        let audioCtx = null, musicGainNode = null, isMusicPlaying = false;
 
         function initAudio() {
             if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) audioCtx = new AudioContextClass();
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx && !isMusicPlaying) startBackgroundMusic();
         }
 
-        // Activadores globales para desbloquear audio en teléfonos/navegadores
-        window.addEventListener('touchstart', initAudio, { passive: true });
-        window.addEventListener('click', initAudio, { passive: true });
+        function startBackgroundMusic() {
+            if (!audioCtx) return;
+            isMusicPlaying = true;
+            musicGainNode = audioCtx.createGain();
+            musicGainNode.gain.setValueAtTime(musicVolume * 0.25, audioCtx.currentTime);
+            musicGainNode.connect(audioCtx.destination);
+
+            const notes = [220, 261.63, 293.66, 329.63, 261.63, 220, 196, 220];
+            let noteIndex = 0;
+
+            setInterval(() => {
+                if (!audioCtx || musicVolume <= 0 || audioCtx.state !== 'running') return;
+                try {
+                    let osc = audioCtx.createOscillator();
+                    let noteGain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(notes[noteIndex], audioCtx.currentTime);
+                    noteGain.gain.setValueAtTime(musicVolume * 0.15, audioCtx.currentTime);
+                    noteGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.38);
+                    osc.connect(noteGain);
+                    noteGain.connect(musicGainNode);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.38);
+                    noteIndex = (noteIndex + 1) % notes.length;
+                } catch(e) {}
+            }, 400);
+        }
 
         function playSound(type) {
-            initAudio(); // Forzar intento de inicio antes de sonar
-            if (!audioCtx) return;
+            if (!audioCtx || sfxVolume <= 0 || audioCtx.state !== 'running') return;
             const now = audioCtx.currentTime;
-
-            if (type === 'shoot') {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(450, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.12);
-            } else if (type === 'collect') {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, now);
-                osc.frequency.setValueAtTime(659.25, now + 0.08);
-                gain.gain.setValueAtTime(0.25, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'powerup') {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.25);
-            } else if (type === 'hit') {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(120, now);
-                osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'gameOver') {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
-                gain.gain.setValueAtTime(0.4, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.6);
-            }
+            try {
+                if (type === 'shoot') {
+                    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(500, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
+                    gain.gain.setValueAtTime(0.3 * sfxVolume, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.12);
+                } else if (type === 'collect') {
+                    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    gain.gain.setValueAtTime(0.35 * sfxVolume, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.2);
+                } else if (type === 'hit') {
+                    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+                    gain.gain.setValueAtTime(0.4 * sfxVolume, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'powerup') {
+                    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.25);
+                    gain.gain.setValueAtTime(0.35 * sfxVolume, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'gameOver') {
+                    let osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(220, now); osc.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+                    gain.gain.setValueAtTime(0.4 * sfxVolume, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.6);
+                }
+            } catch(e) {}
         }
 
         function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (player) {
-                player.x = canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12;
-            }
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            if (player) player.x = canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12;
         }
         window.addEventListener('resize', resize);
 
-        let player, entities, bullets, stars, allies, score, ammo, gameActive, speedMultiplier;
-        let spawnTimer = 0;
-        let narrativeTimer = 0;
-        let pulseAnim = 0; 
-        let allyShootTimer = 0;
+        let player, entities, bullets, stars, score, ammo, gameActive, speedMultiplier;
+        let spawnTimer = 0, pulseAnim = 0;
+        let shieldTime = 0, magnetTime = 0, flashEffect = 0;
+        let isPaused = false;
 
-        // Boss System Variables
-        let boss = null;
-        let level50BossTriggered = false;
-
-        // Triggers de los niveles
-        let level24Triggered = false;
-        let level30Triggered = false;
-        let level40Triggered = false;
-        let level45Triggered = false;
-        let level49Triggered = false;
-
-        // Variables de Habilidades y Efectos
-        let shieldTime = 0;
-        let magnetTime = 0;
-        let flashEffect = 0;
-
-        const phrases = [
-            "¿Quién era yo antes de esto?",
-            "Siento que olvido algo importante...",
-            "Esos fragmentos son familiares.",
-            "El vacío rojo me consume.",
-            "Lo que no recuerdas a tiempo, te termina lastimando..."
-        ];
-
-        const loadingTexts = [
-            "Conectando con la memoria...",
-            "Cargando entidades...",
-            "Preparando Luz Espiritual...",
-            "¡Listo para recordar!"
-        ];
+        const loadingTexts = ["Conectando con la memoria...", "Cargando entidades...", "Preparando Luz Espiritual...", "¡Listo para recordar!"];
 
         function init() {
-            player = {
-                x: canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12,
-                y: canvas.height / 2,
-                targetY: canvas.height / 2,
-                radius: 18
-            };
-            entities = [];
-            bullets = [];
-            stars = [];
-            allies = []; 
-            score = 0;
-            ammo = 5; 
-            speedMultiplier = 1;
-            spawnTimer = 0;
-            narrativeTimer = 0;
-            pulseAnim = 0;
-            allyShootTimer = 0;
-
-            boss = null;
-            level50BossTriggered = false;
-            bossUi.style.display = 'none';
-
-            level24Triggered = false;
-            level30Triggered = false;
-            level40Triggered = false;
-            level45Triggered = false;
-            level49Triggered = false;
-
-            shieldTime = 0;
-            magnetTime = 0;
-            flashEffect = 0;
+            player = { x: canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12, y: canvas.height / 2, targetY: canvas.height / 2, radius: 16 };
+            entities = []; bullets = []; stars = [];
+            score = 0; ammo = 5; speedMultiplier = 1; spawnTimer = 0; pulseAnim = 0;
+            shieldTime = 0; magnetTime = 0; flashEffect = 0;
+            isPaused = false;
 
             for(let i=0; i<40; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 2 + 0.5,
-                    speed: Math.random() * 1.2 + 0.4
-                });
+                stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 + 0.5, speed: Math.random() * 1.2 + 0.4 });
             }
 
             scoreElement.innerText = "Recuerdos: " + score;
@@ -502,193 +914,159 @@
             narrativeElement.innerText = '"No dejes que el olvido te gane..."';
             verdictSpace.innerHTML = "";
             revealMsg.classList.remove('show');
+            pauseModal.style.display = 'none';
+            pauseBtnTop.style.display = 'flex';
             gameActive = true;
+            updateBankDisplays();
+        }
+
+        function pauseGame(e) {
+            if (e) e.stopPropagation();
+            if (!gameActive) return;
+            initAudio();
+            isPaused = true;
+            pauseModal.style.display = 'flex';
+        }
+
+        function resumeGame() {
+            initAudio();
+            isPaused = false;
+            pauseModal.style.display = 'none';
+            requestAnimationFrame(gameLoop);
+        }
+
+        function quitToMenu() {
+            initAudio();
+            gameActive = false;
+            isPaused = false;
+            pauseModal.style.display = 'none';
+            pauseBtnTop.style.display = 'none';
+            menu.style.display = 'flex';
+            totalMemories += score;
+            saveGameData();
         }
 
         window.addEventListener('touchstart', handleTouch, { passive: false });
         window.addEventListener('touchmove', handleTouch, { passive: false });
 
         function handleTouch(e) {
-            if (!gameActive) return;
+            if (!gameActive || isPaused) return;
+            
+            // SI TOCA EL MENÚ O LAS LISTAS, NO MOVER EL JUGADOR
+            if (e.target.closest('#pause-btn-top, .action-btn, .icon-btn-top, #settings-modal, #pause-modal, #menu')) {
+                return;
+            }
+
             initAudio();
             for (let i = 0; i < e.touches.length; i++) {
                 let touch = e.touches[i];
-                if (touch.clientX < canvas.width * 0.7) {
-                    player.targetY = touch.clientY;
-                }
+                if (touch.clientX < canvas.width * 0.6) player.targetY = touch.clientY;
             }
         }
 
         btnShoot.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            initAudio();
-            if (gameActive && ammo > 0) {
+            e.preventDefault(); e.stopPropagation(); initAudio();
+            if (gameActive && !isPaused && ammo > 0) {
                 ammo--;
                 ammoElement.innerText = "Luz Espiritual: " + ammo;
-                playSound('shoot');
-                bullets.push({
-                    x: player.x + player.radius,
-                    y: player.y,
-                    radius: 4,
-                    speed: 13,
-                    fromAlly: false
-                });
+                playSound('shoot'); vibrate(30);
+                bullets.push({ x: player.x + player.radius, y: player.y, radius: 4, speed: 13 });
+
+                // REGISTRAR DISPARO EN ESTADÍSTICAS
+                gameStats.statShots = (gameStats.statShots || 0) + 1;
+                saveGameData();
+            }
+        });
+
+        btnPower.addEventListener('touchstart', (e) => {
+            e.preventDefault(); e.stopPropagation(); initAudio();
+            if (!gameActive || isPaused) return;
+
+            const count = inventoryPowers[equippedPowerId] || 0;
+            if (count > 0) {
+                inventoryPowers[equippedPowerId]--;
+                saveGameData();
+
+                const pObj = POWERS.find(p => p.id === equippedPowerId);
+                if (pObj) triggerSpecialItem(`¡${pObj.name.toUpperCase()} ACTIVADO!`, pObj.type);
+            } else {
+                playSound('hit');
+                narrativeElement.innerText = '"¡No tienes este poder acumulado!"';
             }
         });
 
         function startLoading() {
-            initAudio(); // Activar audio en el primer clic
-            menuContent.style.display = 'none';
-            loaderScreen.style.display = 'flex';
-
-            let progress = 0;
-            let textIdx = 0;
-
+            initAudio();
+            lockLandscape();
+            menuContent.style.display = 'none'; loaderScreen.style.display = 'flex';
+            let progress = 0, textIdx = 0;
             let interval = setInterval(() => {
                 progress += Math.floor(Math.random() * 20) + 12;
                 if (progress > 100) progress = 100;
-
                 loaderFill.style.width = progress + '%';
-
                 if (textIdx < loadingTexts.length - 1 && progress > (textIdx + 1) * 25) {
-                    textIdx++;
-                    loaderStatus.innerText = loadingTexts[textIdx];
+                    textIdx++; loaderStatus.innerText = loadingTexts[textIdx];
                 }
-
                 if (progress >= 100) {
                     clearInterval(interval);
-                    setTimeout(() => {
-                        startGame();
-                    }, 300);
+                    setTimeout(() => startGame(), 300);
                 }
-            }, 150);
+            }, 120);
         }
 
         function startGame() {
-            menu.style.display = 'none';
-            menuContent.style.display = 'block';
-            loaderScreen.style.display = 'none';
-            loaderFill.style.width = '0%';
-
-            init();
-            resize(); 
-            spawnEntity(); 
-            gameLoop();
+            menu.style.display = 'none'; menuContent.style.display = 'block'; loaderScreen.style.display = 'none'; loaderFill.style.width = '0%';
+            init(); resize(); spawnEntity(); gameLoop();
         }
 
         function gameOver() {
             gameActive = false;
-            playSound('gameOver');
+            pauseBtnTop.style.display = 'none';
+            playSound('hit'); setTimeout(() => playSound('gameOver'), 100); vibrate(300);
+            
+            // REGISTRAR MUERTE EN ESTADÍSTICAS
+            gameStats.statDeaths = (gameStats.statDeaths || 0) + 1;
+
+            totalMemories += score; saveGameData();
             menu.style.display = 'flex';
-            bossUi.style.display = 'none';
 
-            document.getElementById('menu-title').innerHTML = `el último <span>recuerdo</span>`;
-
-            if (score < 10) {
-                verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste )</p>`;
-            } else if (score <= 20) {
-                verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste pero 😔 no pudiste )</p>`;
-            } else {
-                verdictSpace.innerHTML = `<p class="victory-msg">( felicidades eres tu de nuevo )</p>`;
-            }
+            let msgExtra = `<br><span style="color:#e1b12c; font-size: 14px;">+${score} recuerdos guardados</span>`;
+            if (score < 10) verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste )${msgExtra}</p>`;
+            else if (score <= 20) verdictSpace.innerHTML = `<p class="game-over-msg">( casi lo recuperaste pero 😔 no pudiste )${msgExtra}</p>`;
+            else verdictSpace.innerHTML = `<p class="victory-msg">( felicidades eres tu de nuevo )${msgExtra}</p>`;
         }
 
         function spawnEntity() {
-            if (!gameActive || boss) return;
-            let rand = Math.random();
-            let type = 'enemy';
-            let unstable = false;
-
-            if (rand > 0.5) {
-                type = 'memory';
-                if (Math.random() < 0.3) unstable = true;
-            }
+            if (!gameActive || isPaused) return;
+            let rand = Math.random(), type = 'enemy';
+            if (rand > 0.5) type = 'memory';
 
             entities.push({
-                x: canvas.width + 40,
-                y: Math.random() * (canvas.height - 100) + 50,
+                x: canvas.width + 40, y: Math.random() * (canvas.height - 80) + 40,
                 radius: type === 'enemy' ? Math.random() * 6 + 12 : 11,
-                type: type,
-                isUnstable: unstable,
-                age: 0,
-                speed: (Math.random() * 2 + 5) * speedMultiplier
+                type: type, speed: (Math.random() * 2 + 5) * speedMultiplier
             });
         }
 
         function triggerSpecialItem(text, type) {
-            revealMsg.innerText = text;
-            revealMsg.classList.add('show');
-            playSound('powerup');
-            setTimeout(() => revealMsg.classList.remove('show'), 2500);
+            revealMsg.innerText = text; revealMsg.classList.add('show');
+            playSound('powerup'); vibrate(80);
+            setTimeout(() => revealMsg.classList.remove('show'), 2000);
 
             if (type !== 'none') {
                 entities.push({
-                    x: canvas.width + 40,
-                    y: Math.random() * (canvas.height - 150) + 75,
-                    radius: 15,
-                    type: type,
-                    speed: 4.5
+                    x: canvas.width + 40, y: player.y, radius: 15, type: type, speed: 4.5
                 });
             }
         }
 
-        function checkLevelTriggers() {
-            if (score >= 24 && !level24Triggered) {
-                level24Triggered = true;
-                triggerSpecialItem("¡UN ALMA SE ACERCA!", 'ally_1');
-            }
-            if (score >= 30 && !level30Triggered) {
-                level30Triggered = true;
-                triggerSpecialItem("¡OTRA PRESENCIA EMERGE!", 'ally_2');
-            }
-            if (score >= 40 && !level40Triggered) {
-                level40Triggered = true;
-                triggerSpecialItem("¡ESCUDO ESPIRITUAL!", 'item_shield');
-            }
-            if (score >= 45 && !level45Triggered) {
-                level45Triggered = true;
-                triggerSpecialItem("¡DESTELLO LIMPIADOR!", 'item_nuke');
-            }
-            if (score >= 49 && !level49Triggered) {
-                level49Triggered = true;
-                triggerSpecialItem("¡ATRACCIÓN DE MEMORIA!", 'item_magnet');
-            }
-            if (score >= 50 && !level50BossTriggered) {
-                level50BossTriggered = true;
-                spawnBoss();
-            }
-        }
-
-        function spawnBoss() {
-            boss = {
-                x: canvas.width + 100,
-                targetX: canvas.width - 120,
-                y: canvas.height / 2,
-                radius: 45,
-                maxHp: 30,
-                hp: 30,
-                angle: 0,
-                shootTimer: 0
-            };
-            bossUi.style.display = 'flex';
-            bossFill.style.width = '100%';
-            triggerSpecialItem("¡AMENAZA SUPREMA!", 'none');
-            narrativeElement.innerText = '"La Sombra del Olvido ha despertado..."';
-        }
-
         function gameLoop() {
-            if (!gameActive) return;
-
-            ctx.fillStyle = '#0b0914';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+            if (!gameActive || isPaused) return;
+            ctx.fillStyle = '#0b0914'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             pulseAnim += 0.15;
-
-            // Actualizar contadores de habilidades
             if (shieldTime > 0) shieldTime--;
             if (magnetTime > 0) magnetTime--;
 
-            // Estrellas
             ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             for(let star of stars) {
                 ctx.fillRect(star.x, star.y, star.size, star.size);
@@ -697,321 +1075,92 @@
             }
 
             spawnTimer++;
-            let spawnRate = Math.max(18, 60 - (score * 1.5));
-            if(spawnTimer >= spawnRate) {
-                spawnEntity();
-                spawnTimer = 0;
-            }
+            let spawnRate = Math.max(16, 50 - (score * 1.5));
+            if(spawnTimer >= spawnRate) { spawnEntity(); spawnTimer = 0; }
 
-            narrativeTimer++;
-            if(narrativeTimer >= 450) {
-                narrativeElement.style.opacity = 0;
-                setTimeout(() => {
-                    narrativeElement.innerText = `"${phrases[Math.floor(Math.random() * phrases.length)]}"`;
-                    narrativeElement.style.opacity = 1;
-                }, 300);
-                narrativeTimer = 0;
-            }
-
-            // Movimiento e interpolación del jugador
             let dyPlayer = player.targetY - player.y;
             player.y += dyPlayer * 0.18;
+            if (player.y < player.radius + 10) player.y = player.radius + 10;
+            if (player.y > canvas.height - player.radius - 10) player.y = canvas.height - player.radius - 10;
 
-            if (player.y < player.radius + 15) player.y = player.radius + 15;
-            if (player.y > canvas.height - player.radius - 15) player.y = canvas.height - player.radius - 15;
-
-            // Dibujar Escudo
             if (shieldTime > 0) {
-                ctx.beginPath();
-                ctx.arc(player.x, player.y, player.radius + 12 + Math.sin(pulseAnim) * 3, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(46, 204, 113, 0.25)';
-                ctx.fill();
-                ctx.strokeStyle = '#2ecc71';
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#2ecc71';
-                ctx.stroke();
-                ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(player.x, player.y, player.radius + 10 + Math.sin(pulseAnim) * 3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(46, 204, 113, 0.25)'; ctx.fill();
+                ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 3; ctx.stroke();
             }
 
-            // Jugador
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ffffff';
-            ctx.fill();
-            ctx.shadowBlur = 0; 
+            let currentColor = getActiveSkinColor();
+            ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = currentColor; ctx.shadowBlur = 15; ctx.shadowColor = currentColor; ctx.fill(); ctx.shadowBlur = 0;
 
-            ctx.fillStyle = '#0b0914'; 
-            ctx.beginPath();
-            ctx.arc(player.x + 6, player.y - 4, 2.5, 0, Math.PI * 2); 
-            ctx.arc(player.x + 6, player.y + 4, 2.5, 0, Math.PI * 2); 
-            ctx.fill();
-
-            // Renderizar Aliados
-            if (allies.length > 0) {
-                allyShootTimer++;
-                let shouldAllyShoot = (allyShootTimer >= 45);
-                if(shouldAllyShoot) allyShootTimer = 0;
-
-                for (let ally of allies) {
-                    ally.angle += 0.05;
-                    let currentX = player.x + ally.offsetXML + Math.sin(ally.angle) * 4;
-                    let currentY = player.y + ally.offsetY + Math.cos(ally.angle) * 4;
-
-                    ctx.beginPath();
-                    ctx.arc(currentX, currentY, ally.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = '#54a0ff';
-                    ctx.shadowBlur = 12;
-                    ctx.shadowColor = '#54a0ff';
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-
-                    ctx.fillStyle = '#0b0914';
-                    ctx.beginPath();
-                    ctx.arc(currentX + 3, currentY - 2, 1.5, 0, Math.PI * 2);
-                    ctx.arc(currentX + 3, currentY + 2, 1.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    if (shouldAllyShoot) {
-                        bullets.push({
-                            x: currentX + ally.radius,
-                            y: currentY,
-                            radius: 3,
-                            speed: 11,
-                            fromAlly: true
-                        });
-                    }
-                }
-            }
-
-            // Procesar y Renderizar Jefe
-            if (boss) {
-                if (boss.x > boss.targetX) boss.x -= 2;
-                boss.angle += 0.04;
-                boss.y = (canvas.height / 2) + Math.sin(boss.angle) * (canvas.height * 0.3);
-
-                // Dibujar Jefe
-                ctx.beginPath();
-                ctx.arc(boss.x, boss.y, boss.radius, 0, Math.PI * 2);
-                ctx.fillStyle = '#8e44ad';
-                ctx.shadowBlur = 25;
-                ctx.shadowColor = '#e74c3c';
-                ctx.fill();
-                ctx.strokeStyle = '#e74c3c';
-                ctx.lineWidth = 4;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-
-                // Ojo del Jefe
-                ctx.fillStyle = '#e74c3c';
-                ctx.beginPath();
-                ctx.arc(boss.x - 10, boss.y, 12, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#000';
-                ctx.beginPath();
-                ctx.arc(boss.x - 12, boss.y, 5, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Ataque del Jefe
-                boss.shootTimer++;
-                if (boss.shootTimer >= 70) {
-                    boss.shootTimer = 0;
-                    entities.push({
-                        x: boss.x - boss.radius,
-                        y: boss.y,
-                        radius: 12,
-                        type: 'enemy',
-                        isUnstable: false,
-                        speed: 7
-                    });
-                }
-            }
-
-            // Procesar Proyectiles
             for (let b = bullets.length - 1; b >= 0; b--) {
-                let bullet = bullets[b];
-                bullet.x += bullet.speed;
-
-                ctx.fillStyle = bullet.fromAlly ? '#74b9ff' : '#3498db';
-                ctx.fillRect(bullet.x, bullet.y - 2, 14, 4);
-
-                if (bullet.x > canvas.width + 20) {
-                    bullets.splice(b, 1);
-                    continue;
-                }
-
-                // Impacto en el Jefe
-                if (boss) {
-                    let bdx = bullet.x - boss.x;
-                    let bdy = bullet.y - boss.y;
-                    let bdist = Math.sqrt(bdx * bdx + bdy * bdy);
-                    if (bdist < boss.radius + bullet.radius) {
-                        bullets.splice(b, 1);
-                        boss.hp--;
-                        playSound('hit');
-                        bossFill.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%';
-
-                        if (boss.hp <= 0) {
-                            score += 25;
-                            scoreElement.innerText = "Recuerdos: " + score;
-                            boss = null;
-                            bossUi.style.display = 'none';
-                            flashEffect = 20;
-                            narrativeElement.innerText = '"¡La Sombra ha colapsado!"';
-                        }
-                        continue;
-                    }
-                }
+                let bullet = bullets[b]; bullet.x += bullet.speed;
+                ctx.fillStyle = '#3498db'; ctx.fillRect(bullet.x, bullet.y - 2, 14, 4);
+                if (bullet.x > canvas.width + 20) { bullets.splice(b, 1); continue; }
 
                 for (let i = entities.length - 1; i >= 0; i--) {
                     let e = entities[i];
                     if (e.type === 'enemy') {
-                        let dx = bullet.x - e.x;
-                        let dy = bullet.y - e.y;
-                        let dist = Math.sqrt(dx * dx + dy * dy);
-
+                        let dx = bullet.x - e.x, dy = bullet.y - e.y, dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < e.radius + bullet.radius) {
-                            entities.splice(i, 1); 
-                            bullets.splice(b, 1); 
-                            score += 1; 
-                            scoreElement.innerText = "Recuerdos: " + score;
-                            playSound('hit');
-                            checkLevelTriggers();
-                            break;
+                            entities.splice(i, 1); bullets.splice(b, 1);
+                            score += 1; scoreElement.innerText = "Recuerdos: " + score;
+                            playSound('hit'); vibrate(15); break;
                         }
                     }
                 }
             }
 
-            // Procesar Entidades
             for (let i = entities.length - 1; i >= 0; i--) {
                 let e = entities[i];
-
                 if (magnetTime > 0 && e.type === 'memory') {
-                    let mdx = player.x - e.x;
-                    let mdy = player.y - e.y;
-                    e.x += mdx * 0.08;
-                    e.y += mdy * 0.08;
-                } else {
-                    e.x -= e.speed;
-                }
+                    let mdx = player.x - e.x, mdy = player.y - e.y;
+                    e.x += mdx * 0.08; e.y += mdy * 0.08;
+                } else e.x -= e.speed;
 
-                if (e.type === 'memory' && e.isUnstable) {
-                    e.age += 1;
-                    if (e.age >= 240) { 
-                        e.type = 'enemy';
-                        e.isUnstable = false;
-                        e.radius = Math.random() * 4 + 13;
-                    }
-                }
-
-                ctx.beginPath();
-                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
-
-                if (e.type === 'enemy') {
-                    ctx.fillStyle = '#e74c3c';
-                } else if (e.type === 'ally_1' || e.type === 'ally_2') {
-                    ctx.fillStyle = '#54a0ff';
-                    ctx.shadowBlur = 18;
-                    ctx.shadowColor = '#54a0ff';
-                } else if (e.type === 'item_shield') {
-                    ctx.fillStyle = '#2ecc71';
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#2ecc71';
-                } else if (e.type === 'item_nuke') {
-                    let blink = Math.sin(pulseAnim * 2) > 0 ? '#ffffff' : '#e74c3c';
-                    ctx.fillStyle = blink;
-                    ctx.shadowBlur = 20;
-                    ctx.shadowColor = blink;
-                } else if (e.type === 'item_magnet') {
-                    ctx.fillStyle = '#9b59b6';
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#9b59b6';
-                } else if (e.isUnstable) {
-                    let ratio = e.age / 240;
-                    let r = Math.floor(225 + (231 - 225) * ratio);
-                    let g = Math.floor(177 - (177 - 76) * ratio);
-                    let b = Math.floor(44 - (44 - 60) * ratio);
-                    ctx.fillStyle = `rgb(${r},${g},${b})`;
-                    if (Math.sin(pulseAnim) > 0) {
-                        ctx.shadowBlur = 12;
-                        ctx.shadowColor = `rgba(${r},${g},${b}, 0.8)`;
-                    }
-                } else {
-                    ctx.fillStyle = '#e1b12c';
-                }
-
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                if (e.type === 'enemy') ctx.fillStyle = '#e74c3c';
+                else if (e.type === 'item_shield') ctx.fillStyle = '#2ecc71';
+                else if (e.type === 'item_nuke') ctx.fillStyle = '#ffffff';
+                else if (e.type === 'item_magnet') ctx.fillStyle = '#9b59b6';
+                else ctx.fillStyle = '#e1b12c';
                 ctx.fill();
-                ctx.shadowBlur = 0;
 
-                // Colisiones
-                let dx = player.x - e.x;
-                let dy = player.y - e.y;
-                let distance = Math.sqrt(dx * dx + dy * dy);
-
+                let dx = player.x - e.x, dy = player.y - e.y, distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance < player.radius + e.radius) {
                     if (e.type === 'enemy') {
-                        if (shieldTime > 0) {
-                            entities.splice(i, 1); 
-                            playSound('hit');
-                        } else {
-                            gameOver();
-                            return;
-                        }
-                    } else if (e.type === 'ally_1') {
-                        allies.push({ offsetXML: -25, offsetY: -35, radius: 10, angle: 0 });
-                        narrativeElement.innerText = '"Un aliado se ha unido a tu causa..."';
-                        playSound('powerup');
-                        entities.splice(i, 1);
-                    } else if (e.type === 'ally_2') {
-                        allies.push({ offsetXML: -25, offsetY: 35, radius: 10, angle: Math.PI });
-                        narrativeElement.innerText = '"Los lazos de luz se fortalecen..."';
-                        playSound('powerup');
-                        entities.splice(i, 1);
+                        if (shieldTime > 0) { entities.splice(i, 1); playSound('hit'); vibrate(25); }
+                        else { gameOver(); return; }
                     } else if (e.type === 'item_shield') {
-                        shieldTime = 300; 
-                        narrativeElement.innerText = '"¡Escudo de Luz Activo!"';
-                        playSound('powerup');
-                        entities.splice(i, 1);
+                        shieldTime = 300; narrativeElement.innerText = '"¡Escudo de Luz Activo!"'; playSound('powerup'); vibrate(50); entities.splice(i, 1);
                     } else if (e.type === 'item_nuke') {
-                        flashEffect = 15; 
-                        entities = entities.filter(ent => ent.type !== 'enemy');
-                        narrativeElement.innerText = '"¡Destello de Luz purificador!"';
-                        playSound('powerup');
+                        flashEffect = 15; entities = entities.filter(ent => ent.type !== 'enemy'); narrativeElement.innerText = '"¡Destello de Luz purificador!"'; playSound('powerup'); vibrate(100);
                     } else if (e.type === 'item_magnet') {
-                        magnetTime = 360; 
-                        narrativeElement.innerText = '"¡Atracción de Recuerdos activada!"';
-                        playSound('powerup');
-                        entities.splice(i, 1);
+                        magnetTime = 360; narrativeElement.innerText = '"¡Atracción de Recuerdos activada!"'; playSound('powerup'); vibrate(50); entities.splice(i, 1);
                     } else {
-                        entities.splice(i, 1);
-                        score++;
-                        ammo = Math.min(10, ammo + 1); 
-                        scoreElement.innerText = "Recuerdos: " + score;
-                        ammoElement.innerText = "Luz Espiritual: " + ammo;
-                        speedMultiplier += 0.025; 
-                        playSound('collect');
-                        checkLevelTriggers();
+                        entities.splice(i, 1); score++; ammo = Math.min(10, ammo + 1);
+                        scoreElement.innerText = "Recuerdos: " + score; ammoElement.innerText = "Luz Espiritual: " + ammo;
+                        speedMultiplier += 0.02; playSound('collect'); vibrate(25);
+
+                        // REGISTRAR RECUERDO AMARILLO OBTENIDO
+                        gameStats.statYellows = (gameStats.statYellows || 0) + 1;
+                        saveGameData();
                     }
                     continue;
                 }
-
-                if (e.x < -50) {
-                    entities.splice(i, 1);
-                }
+                if (e.x < -50) entities.splice(i, 1);
             }
 
-            // Destello (Nuke)
             if (flashEffect > 0) {
                 ctx.fillStyle = `rgba(255, 255, 255, ${flashEffect / 15})`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                flashEffect--;
+                ctx.fillRect(0, 0, canvas.width, canvas.height); flashEffect--;
             }
 
             requestAnimationFrame(gameLoop);
         }
+
+        pauseBtnTop.style.display = 'none';
+        updateBankDisplays();
     </script>
 </body>
 </html>
