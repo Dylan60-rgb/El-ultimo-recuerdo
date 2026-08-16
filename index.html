@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="keywods"content="el ultimo recuerdo juego">
+    <meta name="keywords" content="el ultimo recuerdo juego">
     <title>El Último Recuerdo</title>
     <meta name="google-site-verification" content="txXr2OzKTrTdKP_XWc0tWBNwwFEpAbuVp7anzGJk8x4" />
     <style>
@@ -23,14 +23,13 @@
             touch-action: none;
         }
 
-        /* BANNER DE ADVERTENCIA PARA PANTALLA VERTICAL */
         #rotate-warning {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: #08060f;
             color: #ffffff;
-            z-index: 100;
+            z-index: 200;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -53,6 +52,68 @@
 
         @media screen and (orientation: portrait) {
             #rotate-warning { display: flex !important; }
+        }
+
+        #initial-loader-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #130d22 0%, #05040a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .portal-vortex {
+            width: 160px;
+            height: 160px;
+            margin: 15px 0;
+            animation: spinVortex 8s linear infinite;
+            filter: drop-shadow(0 0 18px rgba(0, 210, 211, 0.6));
+        }
+
+        @keyframes spinVortex {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.05); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .diamonds-bar-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 6px 14px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            margin-top: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .diamond-icon {
+            width: 14px;
+            height: 14px;
+            background: #2a2538;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+
+        .diamond-icon.lit {
+            opacity: 1;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .loader-tips {
+            margin-top: 18px;
+            font-size: 13px;
+            color: #d1d8e0;
+            line-height: 1.4;
+            max-width: 400px;
         }
 
         #canvas {
@@ -81,7 +142,6 @@
             text-shadow: 0 1px 3px rgba(0,0,0,0.6);
         }
 
-        /* BOTÓN DE PAUSA/SALIR CENTRADO ARRIBA EN LA PARED */
         #pause-btn-top {
             position: absolute;
             top: env(safe-area-inset-top, 0px);
@@ -107,7 +167,6 @@
         }
         #pause-btn-top:active { background: rgba(231, 76, 60, 0.6); }
 
-        /* MODAL DE PAUSA / SALIR */
         #pause-modal {
             display: none;
             position: fixed;
@@ -198,14 +257,27 @@
             background: rgba(155, 89, 182, 0.25);
             border-color: #9b59b6;
             box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+            opacity: 0.4;
+            transition: all 0.3s ease;
         }
-        #btn-power:active { background: rgba(155, 89, 182, 0.5); }
+        #btn-power.ready {
+            opacity: 1;
+            background: rgba(46, 204, 113, 0.4);
+            border-color: #2ecc71;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+            animation: pulseBtn 0.8s infinite alternate;
+        }
+
+        @keyframes pulseBtn {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.06); }
+        }
 
         #menu {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at center, #1b152d 0%, #08060f 100%);
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -284,7 +356,6 @@
             max-width: 480px;
         }
 
-        /* PERMITIR EL SCROLL EN PANTALLAS TÁCTILES */
         .powers-grid, .skins-grid, .quests-grid {
             display: flex;
             flex-direction: column;
@@ -294,11 +365,10 @@
             max-height: 180px;
             overflow-y: auto;
             padding: 5px 10px 5px 5px;
-            touch-action: pan-y !important; /* PERMITE SCROLL TÁCTIL VERTICAL */
+            touch-action: pan-y !important;
             -webkit-overflow-scrolling: touch;
         }
 
-        /* BARRA DE SCROLL ESTILIZADA PARA QUE SE VEA BIEN EN CELULARES */
         .powers-grid::-webkit-scrollbar, 
         .skins-grid::-webkit-scrollbar, 
         .quests-grid::-webkit-scrollbar {
@@ -352,7 +422,6 @@
             100% { transform: scale(1.08); }
         }
 
-        /* BARRITAS DE PROGRESO DE MISIONES */
         .quest-progress-bg {
             width: 100%; height: 6px; background: rgba(255,255,255,0.1);
             border-radius: 5px; overflow: hidden; margin-top: 5px;
@@ -380,14 +449,6 @@
             z-index: 25;
         }
         .icon-btn-top svg { width: 16px; height: 16px; fill: #fff; }
-
-        #loader-screen { display: none; flex-direction: column; align-items: center; }
-        .loader-bar-bg {
-            width: 220px; height: 14px; background: rgba(255,255,255,0.1);
-            border: 2px solid #e1b12c; border-radius: 12px; overflow: hidden; margin-top: 10px; padding: 2px;
-        }
-        .loader-bar-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #e1b12c, #f39c12); border-radius: 10px; transition: width 0.2s; }
-        .loader-text { color: #ccc; font-size: 12px; margin-top: 8px; font-style: italic; }
 
         .game-over-msg { font-size: 16px; font-weight: bold; color: #ff7675; margin-top: 8px; }
         .victory-msg { font-size: 18px; font-weight: bold; color: #2ecc71; margin-top: 8px; }
@@ -426,6 +487,36 @@
         <p>Para la mejor experiencia de juego, por favor pon tu teléfono en posición horizontal (acostado).</p>
     </div>
 
+    <div id="initial-loader-screen">
+        <h1 class="slither-title">el último <span>recuerdo</span></h1>
+        
+        <svg class="portal-vortex" viewBox="0 0 200 200">
+            <defs>
+                <linearGradient id="vortexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#00d2d3" />
+                    <stop offset="50%" stop-color="#54a0ff" />
+                    <stop offset="100%" stop-color="#ff9ff3" />
+                </linearGradient>
+            </defs>
+            <g stroke="url(#vortexGrad)" fill="none" stroke-width="8" stroke-linecap="round">
+                <path d="M 100 20 A 80 80 0 0 1 180 100" stroke-width="12" />
+                <path d="M 170 100 A 70 70 0 0 1 100 170" stroke-width="10" />
+                <path d="M 100 160 A 60 60 0 0 1 40 100" stroke-width="8" />
+                <path d="M 50 100 A 50 50 0 0 1 100 50" stroke-width="6" />
+                <path d="M 100 60 A 40 40 0 0 1 140 100" stroke-width="5" />
+            </g>
+        </svg>
+
+        <h2 style="color: #e1b12c; font-size: 18px; font-weight: 800;">Cargando Recuerdos...</h2>
+        
+        <div class="diamonds-bar-container" id="diamonds-container"></div>
+
+        <div class="loader-tips">
+            <p>Consejo: Tu brillo aumenta a medida que atrapas recuerdos.</p>
+            <p style="color: #a5b4fc; margin-top: 4px;">Atención: ¡A los 24 recuerdos aparecen esferas rojas opacas que restan puntos!</p>
+        </div>
+    </div>
+
     <div id="pause-btn-top" onclick="pauseGame(event)">⏸️ SALIR</div>
 
     <div id="pause-modal">
@@ -441,7 +532,7 @@
     <div id="ui-overlay">
         <div id="score">Recuerdos: 0</div>
         <div id="ammo">Luz Espiritual: 5</div>
-        <div id="narrative">"No dejes que el olvido te alcance..."</div>
+        <div id="narrative">"Atrapa los orbes brillantes..."</div>
     </div>
 
     <div id="boss-ui">
@@ -494,8 +585,8 @@
             <input type="text" id="nickname" class="nickname-box" placeholder="Tu Apodo..." maxlength="15" value="Jugador 1">
 
             <br>
-            <button class="btn-slither" onclick="startLoading()">¡Jugar!</button>
-            
+            <button class="btn-slither" onclick="startDirectGame()">¡Jugar!</button>
+
             <div class="menu-buttons-row">
                 <button class="btn-slither btn-wardrobe" onclick="openWardrobe()">👕 Vestidor</button>
                 <button class="btn-slither btn-powershop" onclick="openPowerShop()">⚡ Poderes</button>
@@ -519,22 +610,20 @@
             <button class="btn-slither" onclick="closePowerShop()" style="background: #7f8c8d; border-color: #95a5a6; width:140px; padding:6px;">Volver</button>
         </div>
 
-        <!-- PANTALLA DE MISIONES -->
         <div id="quests-screen">
             <h2 style="color: #54a0ff; font-size: 20px; font-weight: 800;">Misiones y Desafíos</h2>
             <div class="total-bank" id="quests-bank-display">💎 Recuerdos: 10</div>
             <div class="quests-grid" id="quests-container"></div>
             <button class="btn-slither" onclick="closeQuests()" style="background: #7f8c8d; border-color: #95a5a6; width:140px; padding:6px;">Volver</button>
         </div>
-
-        <div id="loader-screen">
-            <h2 style="color: #e1b12c; font-size: 18px; font-weight: 800;">Cargando Recuerdo...</h2>
-            <div class="loader-bar-bg"><div class="loader-bar-fill" id="loader-fill"></div></div>
-            <p class="loader-text" id="loader-status">Sincronizando fragmentos...</p>
-        </div>
     </div>
 
     <script>
+        let isPortrait = window.matchMedia("(orientation: portrait)").matches;
+        window.matchMedia("(orientation: portrait)").addEventListener("change", e => {
+            isPortrait = e.matches;
+        });
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const narrativeElement = document.getElementById('narrative');
@@ -552,9 +641,8 @@
         const wardrobeBankDisplay = document.getElementById('wardrobe-bank-display');
         const powershopBankDisplay = document.getElementById('powershop-bank-display');
         const questsBankDisplay = document.getElementById('quests-bank-display');
-        const loaderScreen = document.getElementById('loader-screen');
-        const loaderFill = document.getElementById('loader-fill');
-        const loaderStatus = document.getElementById('loader-status');
+        const initialLoaderScreen = document.getElementById('initial-loader-screen');
+        const diamondsContainer = document.getElementById('diamonds-container');
         const btnShoot = document.getElementById('btn-shoot');
         const btnPower = document.getElementById('btn-power');
         const powerBtnLabel = document.getElementById('power-btn-label');
@@ -563,21 +651,35 @@
         const pauseModal = document.getElementById('pause-modal');
         const pauseBtnTop = document.getElementById('pause-btn-top');
 
+        const TOTAL_DIAMONDS = 16;
+        const diamondColors = [
+            '#ffffff', '#ffffff', '#e2e8f0', '#cbd5e1', 
+            '#818cf8', '#38bdf8', '#06b6d4', '#14b8a6', 
+            '#10b981', '#06b6d4', '#3b82f6', '#6366f1', 
+            '#a855f7', '#ec4899', '#f43f5e', '#ff9ff3'
+        ];
+
+        for (let i = 0; i < TOTAL_DIAMONDS; i++) {
+            const d = document.createElement('div');
+            d.className = 'diamond-icon';
+            d.id = `diamond-${i}`;
+            diamondsContainer.appendChild(d);
+        }
+
         const SKINS = [
-            { id: 'white', name: 'Luz Pura', color: '#ffffff', price: 0 },
-            { id: 'cyan', name: 'Espectro', color: '#00d2d3', price: 15 },
-            { id: 'pink', name: 'Anhelo', color: '#ff9ff3', price: 30 },
-            { id: 'gold', name: 'Aureo', color: '#feca57', price: 60 },
-            { id: 'lime', name: 'Esperanza', color: '#1dd1a1', price: 100 }
+            { id: 'white', name: 'Luz Pura', rgb: [255, 255, 255], hex: '#ffffff', price: 0 },
+            { id: 'cyan', name: 'Espectro', rgb: [0, 210, 211], hex: '#00d2d3', price: 15 },
+            { id: 'pink', name: 'Anhelo', rgb: [255, 159, 243], hex: '#ff9ff3', price: 30 },
+            { id: 'gold', name: 'Aureo', rgb: [254, 202, 87], hex: '#feca57', price: 60 },
+            { id: 'lime', name: 'Esperanza', rgb: [29, 209, 161], hex: '#1dd1a1', price: 100 }
         ];
 
         const POWERS = [
             { id: 'shield', name: 'Escudo Espiritual', desc: 'Protege de 1 golpe directo', price: 20, type: 'item_shield' },
-            { id: 'nuke', name: 'Destello Limpiador', desc: 'Elimina pelotitas rojas en pantalla', price: 35, type: 'item_nuke' },
+            { id: 'nuke', name: 'Destello Limpiador', desc: 'Convierte pelotitas rojas en recuerdos', price: 35, type: 'item_nuke' },
             { id: 'magnet', name: 'Atracción de Memoria', desc: 'Atrae pelotitas amarillas hacia ti', price: 25, type: 'item_magnet' }
         ];
 
-        // MISIONES
         let QUESTS = [
             { id: 'shoot50', title: '🎯 Gatillo Fácil', desc: 'Dispara 50 veces el rayo de luz', target: 50, reward: 15, key: 'statShots' },
             { id: 'collect30', title: '🟡 Cazador de Memorias', desc: 'Consigue 30 recuerdos amarillos', target: 30, reward: 20, key: 'statYellows' },
@@ -590,7 +692,6 @@
         let inventoryPowers = JSON.parse(localStorage.getItem('inventoryPowers')) || { shield: 0, nuke: 0, magnet: 0 };
         let equippedPowerId = localStorage.getItem('equippedPowerId') || 'shield';
 
-        // ESTADÍSTICAS Y MISIONES GUARDADAS
         let gameStats = JSON.parse(localStorage.getItem('gameStats')) || { statShots: 0, statYellows: 0, statDeaths: 0 };
         let claimedQuests = JSON.parse(localStorage.getItem('claimedQuests')) || [];
 
@@ -611,6 +712,30 @@
                 screen.orientation.lock('landscape').catch(() => {});
             }
         }
+
+        window.addEventListener('load', () => {
+            lockLandscape();
+            let currentDiamond = 0;
+            let interval = setInterval(() => {
+                if (isPortrait) return;
+
+                if (currentDiamond < TOTAL_DIAMONDS) {
+                    const d = document.getElementById(`diamond-${currentDiamond}`);
+                    if (d) {
+                        d.classList.add('lit');
+                        d.style.backgroundColor = diamondColors[currentDiamond];
+                        d.style.color = diamondColors[currentDiamond];
+                    }
+                    currentDiamond++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        initialLoaderScreen.style.display = 'none';
+                        menu.style.display = 'flex';
+                    }, 400);
+                }
+            }, 800);
+        });
 
         function openSettings() { initAudio(); document.getElementById('settings-modal').style.display = 'flex'; }
         function closeSettings() { initAudio(); document.getElementById('settings-modal').style.display = 'none'; }
@@ -643,11 +768,15 @@
 
         function updatePowerButtonLabel() {
             const currentP = POWERS.find(p => p.id === equippedPowerId);
-            const count = inventoryPowers[equippedPowerId] || 0;
-            if(currentP) {
-                powerBtnLabel.innerText = `${currentP.name.split(' ')[0]} (x${count})`;
+            if (hasPowerInHand && currentP) {
+                powerBtnLabel.innerText = `${currentP.name.split(' ')[0]} (¡Listo!)`;
+                btnPower.classList.add('ready');
+            } else if (currentP) {
+                powerBtnLabel.innerText = `Busca el ${currentP.name.split(' ')[0]}`;
+                btnPower.classList.remove('ready');
             } else {
                 powerBtnLabel.innerText = 'Sin Poder';
+                btnPower.classList.remove('ready');
             }
         }
 
@@ -662,7 +791,6 @@
             updateBankDisplays();
         }
 
-        // RENDERING DE MISIONES
         function renderQuests() {
             questsContainer.innerHTML = '';
             QUESTS.forEach(q => {
@@ -727,7 +855,7 @@
                     <div class="power-info">
                         <div class="power-title">${p.name} ${isEquipped ? '✔️' : ''}</div>
                         <div class="power-desc">${p.desc}</div>
-                        <div class="power-count">Tienes: ${count}</div>
+                        <div class="power-count">Tienes: x${count}</div>
                     </div>
                 `;
 
@@ -737,7 +865,7 @@
 
                 const buyBtn = document.createElement('button');
                 buyBtn.className = 'skin-btn buy';
-                buyBtn.innerText = `💎${p.price}`;
+                buyBtn.innerText = `Comprar 💎${p.price}`;
                 buyBtn.onclick = () => buyPower(p);
 
                 const equipBtn = document.createElement('button');
@@ -757,6 +885,7 @@
             if (totalMemories >= power.price) {
                 totalMemories -= power.price;
                 inventoryPowers[power.id] = (inventoryPowers[power.id] || 0) + 1;
+                equippedPowerId = power.id;
                 saveGameData();
                 renderPowerShop();
                 playSound('powerup');
@@ -776,7 +905,7 @@
                 card.className = 'power-card';
                 card.innerHTML = `
                     <div style="display:flex; align-items:center; gap:8px;">
-                        <div style="width:22px; height:22px; border-radius:50%; background:${skin.color}; border:2px solid #fff;"></div>
+                        <div style="width:22px; height:22px; border-radius:50%; background:${skin.hex}; border:2px solid #fff;"></div>
                         <div class="power-title">${skin.name}</div>
                     </div>
                 `;
@@ -809,9 +938,9 @@
         function openWardrobe() { initAudio(); menuContent.style.display = 'none'; wardrobeScreen.style.display = 'flex'; renderWardrobe(); }
         function closeWardrobe() { initAudio(); wardrobeScreen.style.display = 'none'; menuContent.style.display = 'block'; }
 
-        function getActiveSkinColor() {
+        function getActiveSkinData() {
             const skin = SKINS.find(s => s.id === activeSkinId);
-            return skin ? skin.color : '#ffffff';
+            return skin || SKINS[0];
         }
 
         let audioCtx = null, musicGainNode = null, isMusicPlaying = false;
@@ -897,15 +1026,20 @@
         let spawnTimer = 0, pulseAnim = 0;
         let shieldTime = 0, magnetTime = 0, flashEffect = 0;
         let isPaused = false;
-
-        const loadingTexts = ["Conectando con la memoria...", "Cargando entidades...", "Preparando Luz Espiritual...", "¡Listo para recordar!"];
+        let hasPowerInHand = false;
+        let powerSpawnedInGame = false;
 
         function init() {
             player = { x: canvas.width * 0.12 < 50 ? 50 : canvas.width * 0.12, y: canvas.height / 2, targetY: canvas.height / 2, radius: 16 };
             entities = []; bullets = []; stars = [];
-            score = 0; ammo = 5; speedMultiplier = 1; spawnTimer = 0; pulseAnim = 0;
+            score = 0; ammo = 5; 
+            
+            speedMultiplier = 1; 
+            spawnTimer = 0; pulseAnim = 0;
             shieldTime = 0; magnetTime = 0; flashEffect = 0;
             isPaused = false;
+            hasPowerInHand = false;
+            powerSpawnedInGame = false;
 
             for(let i=0; i<40; i++) {
                 stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2 + 0.5, speed: Math.random() * 1.2 + 0.4 });
@@ -913,7 +1047,15 @@
 
             scoreElement.innerText = "Recuerdos: " + score;
             ammoElement.innerText = "Luz Espiritual: " + ammo;
-            narrativeElement.innerText = '"No dejes que el olvido te gane..."';
+            
+            const currentP = POWERS.find(p => p.id === equippedPowerId);
+            const count = inventoryPowers[equippedPowerId] || 0;
+            if (count > 0 && currentP) {
+                narrativeElement.innerText = `"¡Atrapa el orbe de ${currentP.name} que volará!"`;
+            } else {
+                narrativeElement.innerText = '"¡Atrapa los recuerdos amarillos para brillar!"';
+            }
+
             verdictSpace.innerHTML = "";
             revealMsg.classList.remove('show');
             pauseModal.style.display = 'none';
@@ -952,10 +1094,9 @@
         window.addEventListener('touchmove', handleTouch, { passive: false });
 
         function handleTouch(e) {
-            if (!gameActive || isPaused) return;
-            
-            // SI TOCA EL MENÚ O LAS LISTAS, NO MOVER EL JUGADOR
-            if (e.target.closest('#pause-btn-top, .action-btn, .icon-btn-top, #settings-modal, #pause-modal, #menu')) {
+            if (!gameActive || isPaused || isPortrait) return;
+
+            if (e.target.closest('#pause-btn-top, .action-btn, .icon-btn-top, #settings-modal, #pause-modal, #menu, #initial-loader-screen')) {
                 return;
             }
 
@@ -968,13 +1109,12 @@
 
         btnShoot.addEventListener('touchstart', (e) => {
             e.preventDefault(); e.stopPropagation(); initAudio();
-            if (gameActive && !isPaused && ammo > 0) {
+            if (gameActive && !isPaused && !isPortrait && ammo > 0) {
                 ammo--;
                 ammoElement.innerText = "Luz Espiritual: " + ammo;
                 playSound('shoot'); vibrate(30);
                 bullets.push({ x: player.x + player.radius, y: player.y, radius: 4, speed: 13 });
 
-                // REGISTRAR DISPARO EN ESTADÍSTICAS
                 gameStats.statShots = (gameStats.statShots || 0) + 1;
                 saveGameData();
             }
@@ -982,51 +1122,40 @@
 
         btnPower.addEventListener('touchstart', (e) => {
             e.preventDefault(); e.stopPropagation(); initAudio();
-            if (!gameActive || isPaused) return;
+            if (!gameActive || isPaused || isPortrait) return;
 
-            const count = inventoryPowers[equippedPowerId] || 0;
-            if (count > 0) {
-                inventoryPowers[equippedPowerId]--;
-                saveGameData();
+            if (hasPowerInHand) {
+                hasPowerInHand = false;
+                updatePowerButtonLabel();
 
                 const pObj = POWERS.find(p => p.id === equippedPowerId);
-                if (pObj) triggerSpecialItem(`¡${pObj.name.toUpperCase()} ACTIVADO!`, pObj.type);
+                if (pObj) triggerSpecialItem(`¡${pObj.name.toUpperCase()} ACTIVADO!`, pObj.id);
             } else {
                 playSound('hit');
-                narrativeElement.innerText = '"¡No tienes este poder acumulado!"';
+                const pObj = POWERS.find(p => p.id === equippedPowerId);
+                if (inventoryPowers[equippedPowerId] > 0) {
+                    narrativeElement.innerText = `"¡Atrapa la esfera de ${pObj ? pObj.name : 'poder'} primero!"`;
+                } else {
+                    narrativeElement.innerText = '"¡Debes comprar poderes en la tienda!"';
+                }
             }
         });
 
-        function startLoading() {
+        function startDirectGame() {
             initAudio();
             lockLandscape();
-            menuContent.style.display = 'none'; loaderScreen.style.display = 'flex';
-            let progress = 0, textIdx = 0;
-            let interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 20) + 12;
-                if (progress > 100) progress = 100;
-                loaderFill.style.width = progress + '%';
-                if (textIdx < loadingTexts.length - 1 && progress > (textIdx + 1) * 25) {
-                    textIdx++; loaderStatus.innerText = loadingTexts[textIdx];
-                }
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    setTimeout(() => startGame(), 300);
-                }
-            }, 120);
-        }
-
-        function startGame() {
-            menu.style.display = 'none'; menuContent.style.display = 'block'; loaderScreen.style.display = 'none'; loaderFill.style.width = '0%';
-            init(); resize(); spawnEntity(); gameLoop();
+            menu.style.display = 'none';
+            init(); 
+            resize(); 
+            spawnEntity(); 
+            gameLoop();
         }
 
         function gameOver() {
             gameActive = false;
             pauseBtnTop.style.display = 'none';
             playSound('hit'); setTimeout(() => playSound('gameOver'), 100); vibrate(300);
-            
-            // REGISTRAR MUERTE EN ESTADÍSTICAS
+
             gameStats.statDeaths = (gameStats.statDeaths || 0) + 1;
 
             totalMemories += score; saveGameData();
@@ -1039,31 +1168,80 @@
         }
 
         function spawnEntity() {
-            if (!gameActive || isPaused) return;
-            let rand = Math.random(), type = 'enemy';
-            if (rand > 0.5) type = 'memory';
+            if (!gameActive || isPaused || isPortrait) return;
+            
+            const availableCount = inventoryPowers[equippedPowerId] || 0;
+            let currentPowerType = null;
+
+            if (availableCount > 0 && !powerSpawnedInGame && Math.random() < 0.4) {
+                const pObj = POWERS.find(p => p.id === equippedPowerId);
+                if (pObj) {
+                    currentPowerType = pObj.type;
+                    powerSpawnedInGame = true;
+                }
+            }
+
+            let type = 'enemy';
+            if (currentPowerType) {
+                type = currentPowerType;
+            } else {
+                let rand = Math.random();
+                // A partir del recuerdo 24 aparecen también las pelotitas dim_enemy (rojo apagado que quitan recuerdos)
+                if (score >= 24 && rand < 0.3) {
+                    type = 'dim_enemy';
+                } else if (rand > 0.5) {
+                    type = 'memory';
+                }
+            }
 
             entities.push({
                 x: canvas.width + 40, y: Math.random() * (canvas.height - 80) + 40,
-                radius: type === 'enemy' ? Math.random() * 6 + 12 : 11,
-                type: type, speed: (Math.random() * 2 + 5) * speedMultiplier
+                radius: type === 'enemy' ? Math.random() * 6 + 12 : (type === 'dim_enemy' ? 13 : 16),
+                type: type, 
+                speed: (Math.random() * 1.3 + 2.2) * speedMultiplier
             });
         }
 
-        function triggerSpecialItem(text, type) {
+        function triggerSpecialItem(text, powerId) {
             revealMsg.innerText = text; revealMsg.classList.add('show');
             playSound('powerup'); vibrate(80);
             setTimeout(() => revealMsg.classList.remove('show'), 2000);
 
-            if (type !== 'none') {
-                entities.push({
-                    x: canvas.width + 40, y: player.y, radius: 15, type: type, speed: 4.5
+            if (powerId === 'shield') {
+                shieldTime = 300;
+                narrativeElement.innerText = '"¡Escudo Espiritual Activo!"';
+            } else if (powerId === 'nuke') {
+                flashEffect = 15;
+                entities.forEach(ent => {
+                    if (ent.type === 'enemy' || ent.type === 'dim_enemy') {
+                        ent.type = 'memory';
+                        ent.radius = 11;
+                    }
                 });
+                narrativeElement.innerText = '"¡Los recuerdos purificados emergen!"';
+            } else if (powerId === 'magnet') {
+                magnetTime = 360;
+                narrativeElement.innerText = '"¡Atracción de Recuerdos activada!"';
             }
         }
 
+        function catchPowerInAir(powerId) {
+            if (inventoryPowers[powerId] && inventoryPowers[powerId] > 0) {
+                inventoryPowers[powerId]--;
+                saveGameData();
+            }
+            hasPowerInHand = true;
+            updatePowerButtonLabel();
+            playSound('powerup'); vibrate(60);
+            narrativeElement.innerText = '"¡PODER AGARRADO! Presiona USAR PODER para activarlo"';
+        }
+
         function gameLoop() {
-            if (!gameActive || isPaused) return;
+            if (!gameActive || isPaused || isPortrait) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
             ctx.fillStyle = '#0b0914'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             pulseAnim += 0.15;
             if (shieldTime > 0) shieldTime--;
@@ -1077,7 +1255,7 @@
             }
 
             spawnTimer++;
-            let spawnRate = Math.max(16, 50 - (score * 1.5));
+            let spawnRate = Math.max(22, 65 - (score * 0.9));
             if(spawnTimer >= spawnRate) { spawnEntity(); spawnTimer = 0; }
 
             let dyPlayer = player.targetY - player.y;
@@ -1091,9 +1269,32 @@
                 ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 3; ctx.stroke();
             }
 
-            let currentColor = getActiveSkinColor();
-            ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-            ctx.fillStyle = currentColor; ctx.shadowBlur = 15; ctx.shadowColor = currentColor; ctx.fill(); ctx.shadowBlur = 0;
+            /* SISTEMA DE COLOR OPACADO A BRILLANTE SEGÚN LOS RECUERDOS (0 a 10) */
+            let progress = Math.min(score / 10, 1.0); // Factor de 0.0 a 1.0
+            let skinData = getActiveSkinData();
+            let [r, g, b] = skinData.rgb;
+
+            let brightnessFactor = 0.2 + (0.8 * progress);
+            let curR = Math.floor(r * brightnessFactor);
+            let curG = Math.floor(g * brightnessFactor);
+            let curB = Math.floor(b * brightnessFactor);
+
+            let dynamicColor = `rgb(${curR}, ${curG}, ${curB})`;
+            let glowIntensity = progress * 25; // De 0 a 25px de resplandor
+
+            ctx.beginPath(); 
+            ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = dynamicColor;
+            
+            if (glowIntensity > 2) {
+                ctx.shadowBlur = glowIntensity; 
+                ctx.shadowColor = dynamicColor; 
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
+            ctx.fill(); 
+            ctx.shadowBlur = 0;
 
             for (let b = bullets.length - 1; b >= 0; b--) {
                 let bullet = bullets[b]; bullet.x += bullet.speed;
@@ -1102,11 +1303,12 @@
 
                 for (let i = entities.length - 1; i >= 0; i--) {
                     let e = entities[i];
-                    if (e.type === 'enemy') {
+                    if (e.type === 'enemy' || e.type === 'dim_enemy') {
                         let dx = bullet.x - e.x, dy = bullet.y - e.y, dist = Math.sqrt(dx * dx + dy * dy);
                         if (dist < e.radius + bullet.radius) {
                             entities.splice(i, 1); bullets.splice(b, 1);
                             score += 1; scoreElement.innerText = "Recuerdos: " + score;
+                            speedMultiplier += 0.006; 
                             playSound('hit'); vibrate(15); break;
                         }
                     }
@@ -1122,29 +1324,56 @@
 
                 ctx.beginPath(); ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
                 if (e.type === 'enemy') ctx.fillStyle = '#e74c3c';
-                else if (e.type === 'item_shield') ctx.fillStyle = '#2ecc71';
-                else if (e.type === 'item_nuke') ctx.fillStyle = '#ffffff';
-                else if (e.type === 'item_magnet') ctx.fillStyle = '#9b59b6';
+                else if (e.type === 'dim_enemy') ctx.fillStyle = '#802b2b'; // Rojo opaco
+                else if (e.type === 'item_shield') {
+                    ctx.fillStyle = '#2ecc71';
+                    ctx.shadowBlur = 12; ctx.shadowColor = '#2ecc71';
+                }
+                else if (e.type === 'item_nuke') {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.shadowBlur = 12; ctx.shadowColor = '#ffffff';
+                }
+                else if (e.type === 'item_magnet') {
+                    ctx.fillStyle = '#9b59b6';
+                    ctx.shadowBlur = 12; ctx.shadowColor = '#9b59b6';
+                }
                 else ctx.fillStyle = '#e1b12c';
+                
                 ctx.fill();
+                ctx.shadowBlur = 0;
 
                 let dx = player.x - e.x, dy = player.y - e.y, distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance < player.radius + e.radius) {
                     if (e.type === 'enemy') {
-                        if (shieldTime > 0) { entities.splice(i, 1); playSound('hit'); vibrate(25); }
-                        else { gameOver(); return; }
+                        if (shieldTime > 0) { 
+                            e.type = 'memory';
+                            e.radius = 11;
+                            playSound('hit'); vibrate(25); 
+                        } else { 
+                            gameOver(); return; 
+                        }
+                    } else if (e.type === 'dim_enemy') {
+                        // Pelotita roja opaca: quita 1 recuerdo pero no mata
+                        entities.splice(i, 1);
+                        score = Math.max(0, score - 1);
+                        scoreElement.innerText = "Recuerdos: " + score;
+                        playSound('hit'); vibrate(50);
+                        narrativeElement.innerText = '"¡Un recuerdo se ha desvanecido...!"';
                     } else if (e.type === 'item_shield') {
-                        shieldTime = 300; narrativeElement.innerText = '"¡Escudo de Luz Activo!"'; playSound('powerup'); vibrate(50); entities.splice(i, 1);
+                        catchPowerInAir('shield');
+                        entities.splice(i, 1);
                     } else if (e.type === 'item_nuke') {
-                        flashEffect = 15; entities = entities.filter(ent => ent.type !== 'enemy'); narrativeElement.innerText = '"¡Destello de Luz purificador!"'; playSound('powerup'); vibrate(100);
+                        catchPowerInAir('nuke');
+                        entities.splice(i, 1);
                     } else if (e.type === 'item_magnet') {
-                        magnetTime = 360; narrativeElement.innerText = '"¡Atracción de Recuerdos activada!"'; playSound('powerup'); vibrate(50); entities.splice(i, 1);
+                        catchPowerInAir('magnet');
+                        entities.splice(i, 1);
                     } else {
                         entities.splice(i, 1); score++; ammo = Math.min(10, ammo + 1);
                         scoreElement.innerText = "Recuerdos: " + score; ammoElement.innerText = "Luz Espiritual: " + ammo;
-                        speedMultiplier += 0.02; playSound('collect'); vibrate(25);
+                        speedMultiplier += 0.006; 
+                        playSound('collect'); vibrate(25);
 
-                        // REGISTRAR RECUERDO AMARILLO OBTENIDO
                         gameStats.statYellows = (gameStats.statYellows || 0) + 1;
                         saveGameData();
                     }
